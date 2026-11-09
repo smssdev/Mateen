@@ -1,68 +1,75 @@
 :root {
-  --bg: #f6f1e7;
-  --surface: #fffdf8;
-  --surface-2: #efe7d6;
-  --ink: #1d2a26;
-  --muted: #6b746f;
-  --line: #e2d8c4;
-  --brand: #0f5c4d;
-  --brand-ink: #ffffff;
-  --brand-soft: #d7ebe4;
-  --gold: #b8862b;
-  --good: #23855f;
-  --bad: #c0392b;
-  --bad-soft: #f9dcd7;
-  --new: #2f6db5;
-  --new-soft: #dce8f7;
-  --hidden: #e7dcc5;
-  --current: #f3d79a;
+  --bg: #fbf7ef;
+  --surface: #ffffff;
+  --surface-2: #f1eadb;
+  --ink: #14213d;
+  --muted: #64708a;
+  --line: #e6dcc8;
+  --brand: #14213d;
+  --brand-ink: #fbf7ef;
+  --brand-soft: #e3e8f3;
+  --gold: #b97c14;
+  --jade: #1f8a7a;
+  --jade-soft: #dcf0ec;
+  --good: #1f8a7a;
+  --bad: #c8463d;
+  --bad-soft: #f9dfdb;
+  --new: #2e64b8;
+  --new-soft: #dfe8f7;
+  --hidden: #ece3d0;
+  --current: #f6d89b;
   --radius: 14px;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 4px 16px rgb(0 0 0 / 0.04);
+  --shadow: 0 1px 2px rgb(20 33 61 / 0.06), 0 6px 20px rgb(20 33 61 / 0.06);
   --q-font: 'Amiri Quran', 'Amiri', 'KFGQPC Uthmanic Script HAFS', serif;
   --ui-font: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --display-font: 'Reem Kufi', 'IBM Plex Sans Arabic', sans-serif;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #101614;
-    --surface: #18201d;
-    --surface-2: #212b27;
-    --ink: #e8ece9;
-    --muted: #93a09a;
-    --line: #2c3833;
-    --brand: #3fb393;
-    --brand-ink: #08201a;
-    --brand-soft: #173a31;
-    --gold: #e0b45c;
-    --good: #4cc08f;
-    --bad: #ef6f61;
-    --bad-soft: #43201c;
-    --new: #73a7ea;
-    --new-soft: #1b2c42;
-    --hidden: #2b3631;
-    --current: #6b5523;
+    --bg: #0d1426;
+    --surface: #151f38;
+    --surface-2: #1d2946;
+    --ink: #eef1f7;
+    --muted: #97a3bd;
+    --line: #26345a;
+    --brand: #e3a33b;
+    --brand-ink: #14213d;
+    --brand-soft: #2a3352;
+    --gold: #e9b45a;
+    --jade: #43c2ad;
+    --jade-soft: #143a3a;
+    --good: #43c2ad;
+    --bad: #f07a6e;
+    --bad-soft: #4a2228;
+    --new: #82acf0;
+    --new-soft: #1b2b4d;
+    --hidden: #24314f;
+    --current: #6d5521;
     color-scheme: dark;
   }
 }
 :root[data-theme='dark'] {
-  --bg: #101614;
-  --surface: #18201d;
-  --surface-2: #212b27;
-  --ink: #e8ece9;
-  --muted: #93a09a;
-  --line: #2c3833;
-  --brand: #3fb393;
-  --brand-ink: #08201a;
-  --brand-soft: #173a31;
-  --gold: #e0b45c;
-  --good: #4cc08f;
-  --bad: #ef6f61;
-  --bad-soft: #43201c;
-  --new: #73a7ea;
-  --new-soft: #1b2c42;
-  --hidden: #2b3631;
-  --current: #6b5523;
+  --bg: #0d1426;
+  --surface: #151f38;
+  --surface-2: #1d2946;
+  --ink: #eef1f7;
+  --muted: #97a3bd;
+  --line: #26345a;
+  --brand: #e3a33b;
+  --brand-ink: #14213d;
+  --brand-soft: #2a3352;
+  --gold: #e9b45a;
+  --jade: #43c2ad;
+  --jade-soft: #143a3a;
+  --good: #43c2ad;
+  --bad: #f07a6e;
+  --bad-soft: #4a2228;
+  --new: #82acf0;
+  --new-soft: #1b2b4d;
+  --hidden: #24314f;
+  --current: #6d5521;
   color-scheme: dark;
 }
 
@@ -208,7 +215,7 @@ main {
 
 /* ---------- home ---------- */
 .hero {
-  background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--brand) 70%, #000));
+  background: radial-gradient(120% 90% at 100% 0%, #24365f 0%, #14213d 55%, #0d1629 100%);
   color: #fff;
   border-radius: 20px;
   padding: 20px;
@@ -217,8 +224,22 @@ main {
   box-shadow: var(--shadow);
 }
 .hero h1 {
-  font-size: 2rem;
+  font-family: var(--display-font);
+  font-size: 1.9rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero h1 img {
+  width: 54px;
+  height: auto;
+}
+h1,
+h2,
+.page-head h1 {
+  font-family: var(--display-font);
+  font-weight: 600;
 }
 .hero p {
   margin: 4px 0 0;
@@ -230,14 +251,6 @@ main {
 }
 .hero .stat span {
   color: rgb(255 255 255 / 0.8);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) .hero {
-    background: linear-gradient(135deg, #14594b, #0b2f28);
-  }
-}
-:root[data-theme='dark'] .hero {
-  background: linear-gradient(135deg, #14594b, #0b2f28);
 }
 
 .stat-row {
@@ -1013,11 +1026,11 @@ button.wcard {
   background: var(--surface-2);
 }
 .segs.good i.on {
-  background: #6cb87a;
+  background: var(--jade);
 }
 .segs.mid i.on,
 .segs.low i.on {
-  background: #f0c64b;
+  background: #e3a33b;
 }
 .errs {
   color: var(--bad);
@@ -1209,4 +1222,295 @@ button.wcard {
   .donut-wrap {
     flex-direction: column;
   }
+}
+
+/* ---------- linking: understand · link · repeat ---------- */
+.stepper {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.stepper button {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--muted);
+}
+.stepper button span {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 0.8rem;
+  background: var(--surface-2);
+}
+.stepper button.on {
+  border-color: var(--jade);
+  color: var(--jade);
+  background: var(--jade-soft);
+}
+.stepper button.on span {
+  background: var(--jade);
+  color: #fff;
+}
+.stepper button.done {
+  color: var(--ink);
+}
+.stepper button.done span {
+  background: var(--gold);
+  color: #fff;
+}
+.meaning,
+.link-ring,
+.repeat-box,
+.similar {
+  margin-top: 12px;
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.meaning {
+  border-inline-start: 4px solid var(--jade);
+}
+.meaning h4,
+.link-ring h4,
+.similar h4 {
+  margin: 0 0 6px;
+  font-family: var(--display-font);
+  font-weight: 600;
+  font-size: 1rem;
+}
+.meaning h4 {
+  color: var(--jade);
+}
+.meaning p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.9;
+}
+.meaning small {
+  color: var(--muted);
+}
+.link-ring {
+  border-inline-start: 4px solid var(--gold);
+}
+.link-ring h4 {
+  color: var(--gold);
+}
+.ring {
+  font-family: var(--q-font);
+  font-size: calc(1.5rem * var(--q-scale, 1));
+  line-height: 2.2;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.ring .prev {
+  color: var(--muted);
+}
+.ring .chain {
+  font-family: var(--ui-font);
+  color: var(--gold);
+  font-size: 1.2rem;
+}
+.ring .next {
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  border-radius: 10px;
+  padding: 0 8px;
+}
+.word.link-head {
+  background: color-mix(in srgb, var(--gold) 18%, transparent);
+}
+.similar {
+  border-inline-start: 4px solid var(--bad);
+}
+.similar h4 {
+  color: var(--bad);
+}
+.similar ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.similar li {
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+.sim-ref {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.sim-q {
+  font-family: var(--q-font);
+  font-size: 1.3rem;
+  line-height: 2.1;
+  margin: 0;
+}
+mark.shared {
+  background: color-mix(in srgb, var(--gold) 20%, transparent);
+  color: inherit;
+}
+.sim-fork {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+.sim-fork span {
+  border-radius: 99px;
+  padding: 2px 12px;
+}
+.sim-fork b {
+  font-family: var(--q-font);
+  font-weight: 400;
+  font-size: 1.25rem;
+}
+.sim-fork .here {
+  background: var(--jade-soft);
+  color: var(--jade);
+}
+.sim-fork .there {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+.fork-warn,
+.hint-box {
+  width: min(100%, 440px);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+  line-height: 1.8;
+}
+.fork-warn {
+  background: var(--bad-soft);
+  color: var(--bad);
+  font-weight: 600;
+  text-align: center;
+}
+.hint-box {
+  background: var(--jade-soft);
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--jade) 40%, transparent);
+  max-height: 30dvh;
+  overflow: auto;
+}
+.hint-box b {
+  color: var(--jade);
+}
+.btn.on {
+  background: var(--jade-soft);
+  border-color: var(--jade);
+  color: var(--jade);
+}
+.fork-note {
+  position: absolute;
+  bottom: 10px;
+  inset-inline: 70px;
+  font-size: 0.78rem;
+  color: var(--bad);
+  text-align: center;
+}
+.fork-chip {
+  font-size: 0.75rem;
+  color: var(--bad);
+  background: var(--bad-soft);
+  border-radius: 99px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+/* Amiri Quran ships coloured diacritics (COLR); keep the mushaf text one colour. */
+@font-palette-values --q-ink {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #14213d, 1 #14213d, 2 #14213d, 3 #14213d;
+}
+@font-palette-values --q-ink-dark {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #eef1f7, 1 #eef1f7, 2 #eef1f7, 3 #eef1f7;
+}
+@font-palette-values --q-red {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #c8463d, 1 #c8463d, 2 #c8463d, 3 #c8463d;
+}
+@font-palette-values --q-red-dark {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #f07a6e, 1 #f07a6e, 2 #f07a6e, 3 #f07a6e;
+}
+@font-palette-values --q-muted {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #64708a, 1 #64708a, 2 #64708a, 3 #64708a;
+}
+@font-palette-values --q-muted-dark {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #97a3bd, 1 #97a3bd, 2 #97a3bd, 3 #97a3bd;
+}
+@font-palette-values --q-white {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #fbf7ef, 1 #fbf7ef, 2 #fbf7ef, 3 #fbf7ef;
+}
+@font-palette-values --q-jade {
+  font-family: 'Amiri Quran';
+  override-colors: 0 #1f8a7a, 1 #1f8a7a, 2 #1f8a7a, 3 #1f8a7a;
+}
+
+:root {
+  --q-pal: --q-ink;
+  --q-pal-red: --q-red;
+  --q-pal-muted: --q-muted;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --q-pal: --q-ink-dark;
+    --q-pal-red: --q-red-dark;
+    --q-pal-muted: --q-muted-dark;
+  }
+}
+:root[data-theme='dark'] {
+  --q-pal: --q-ink-dark;
+  --q-pal-red: --q-red-dark;
+  --q-pal-muted: --q-muted-dark;
+}
+body {
+  font-palette: var(--q-pal);
+}
+.word.wrong,
+.is-wrong .wcard-word,
+.sim-fork .there,
+mark:not(.shared),
+.fork-row .split {
+  font-palette: var(--q-pal-red);
+}
+.context,
+.ring .prev,
+.wcard-word.faded,
+.stumbles .muted {
+  font-palette: var(--q-pal-muted);
+}
+.wcard.bottom.next,
+.hero {
+  font-palette: --q-white;
+}
+.sim-fork .here {
+  font-palette: --q-jade;
+}
+.share-btn {
+  margin-inline-start: auto;
 }

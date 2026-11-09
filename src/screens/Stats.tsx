@@ -41,6 +41,43 @@ export function Stats({ index, onPractice }: { index: SurahMeta[]; onPractice: (
     need.forEach((n) => loadSurah(n).then((t) => setTexts((x) => ({ ...x, [n]: t })), () => undefined));
   }, [totals.weak, texts]);
 
+  const [shared, setShared] = useState('');
+  /** A plain-text progress report the student can send to their teacher. */
+  const shareReport = async () => {
+    const week = Array.from({ length: 7 }, (_, i) => state.log[today - i]);
+    const weekAyahs = week.reduce((t, l) => t + (l ? l.reviews + l.learned : 0), 0);
+    const weekWords = week.reduce((t, l) => t + (l?.words ?? 0), 0);
+    const weekMistakes = week.reduce((t, l) => t + (l?.mistakes ?? 0), 0);
+    const perSurah = Object.entries(state.progress)
+      .map(([n, cards]) => ({ n: +n, count: Object.keys(cards).length }))
+      .filter((x) => x.count > 0)
+      .sort((a, b) => a.n - b.n)
+      .map((x) => `• ${index[x.n - 1].name}: ${toArabicDigits(x.count)} من ${toArabicDigits(index[x.n - 1].ayahs)} آية`);
+    const stumbles = totals.weak.slice(0, 8).map((w) => {
+      const words = texts[w.surah]?.ayahs[w.ayah];
+      return `• ${index[w.surah - 1].name} ${toArabicDigits(w.ayah + 1)}: «${words?.[w.word] ?? '…'}» (${toArabicDigits(w.errs)} مرات)`;
+    });
+    const text = [
+      'تقرير تقدّمي في الحفظ — حافظ فاهم',
+      `الآيات المحفوظة: ${toArabicDigits(totals.ayahs)} (المتقنة منها: ${toArabicDigits(totals.solid)})`,
+      `أيام متتالية: ${toArabicDigits(streak(state))}`,
+      `آخر ٧ أيام: ${toArabicDigits(weekAyahs)} آية، ${toArabicDigits(weekWords)} كلمة، ${toArabicDigits(weekMistakes)} خطأ`,
+      '',
+      'ما بدأت حفظه:',
+      ...perSurah,
+      ...(stumbles.length ? ['', 'أكثر مواضع التعثّر:', ...stumbles] : []),
+    ].join('\n');
+    try {
+      if (navigator.share) await navigator.share({ title: 'تقرير تقدّمي', text });
+      else {
+        await navigator.clipboard.writeText(text);
+        setShared('نُسخ التقرير — الصقه في رسالة لمعلّمك.');
+      }
+    } catch {
+      /* user cancelled */
+    }
+  };
+
   const days = Array.from({ length: 30 }, (_, i) => today - 29 + i);
   const max = Math.max(1, ...days.map((d) => (state.log[d]?.reviews ?? 0) + (state.log[d]?.learned ?? 0)));
 
@@ -48,7 +85,11 @@ export function Stats({ index, onPractice }: { index: SurahMeta[]; onPractice: (
     <div className="screen">
       <header className="page-head">
         <h1>إحصاءاتي</h1>
+        <button className="btn small share-btn" onClick={shareReport} disabled={!totals.ayahs}>
+          مشاركة التقدّم مع المعلّم
+        </button>
       </header>
+      {shared && <p className="tip">{shared}</p>}
       <div className="stat-row">
         <Stat label="يوم متتالٍ" value={streak(state)} />
         <Stat label="آية محفوظة" value={totals.ayahs} />

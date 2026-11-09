@@ -8,9 +8,14 @@ export interface SurahMeta {
   juz: number;
 }
 
+/** [surah (1-based), ayah (0-based), startHere, startThere, sharedLength] */
+export type SimilarRef = [number, number, number, number, number];
+
 export interface SurahText {
   n: number;
   ayahs: string[][];
+  /** ayah index → verses elsewhere that share a run of words with it (mutashabihat) */
+  sim?: Record<number, SimilarRef[]>;
 }
 
 const base = import.meta.env.BASE_URL;
@@ -75,4 +80,19 @@ export function loadParts(): Promise<Parts> {
     return r.json();
   });
   return partsPromise;
+}
+
+const tafsirCache = new Map<number, Promise<string[]>>();
+/** al-Muyassar tafsir, one string per ayah. */
+export function loadTafsir(n: number): Promise<string[]> {
+  let p = tafsirCache.get(n);
+  if (!p) {
+    p = fetch(`${base}tafsir/${n}.json`).then((r) => {
+      if (!r.ok) throw new Error('تعذر تحميل التفسير');
+      return r.json();
+    });
+    p.catch(() => tafsirCache.delete(n));
+    tafsirCache.set(n, p);
+  }
+  return p;
 }

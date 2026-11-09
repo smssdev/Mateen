@@ -2,7 +2,7 @@ name: Android APK
 
 # Builds the app on every push and publishes it as a GitHub Release, so the
 # latest APK is always at:
-#   https://github.com/smssdev/Mateen/releases/latest/download/mateen.apk
+#   https://github.com/smssdev/Mateen/releases/latest/download/hafiz-fahim.apk
 #
 # Release signing uses these repository secrets (Settings → Secrets → Actions):
 #   MATEEN_KEYSTORE_BASE64, MATEEN_KEYSTORE_PASSWORD, MATEEN_KEY_ALIAS, MATEEN_KEY_PASSWORD
@@ -56,26 +56,28 @@ jobs:
             ./gradlew assembleRelease --no-daemon
           fi
           mkdir -p ../out
+          cp app/build/outputs/apk/release/app-release.apk ../out/hafiz-fahim.apk
+          # the old file name keeps earlier download links working
           cp app/build/outputs/apk/release/app-release.apk ../out/mateen.apk
           if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
-            cp app/build/outputs/bundle/release/app-release.aab ../out/mateen.aab
+            cp app/build/outputs/bundle/release/app-release.aab ../out/hafiz-fahim.aab
           fi
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mateen-${{ env.VERSION_NAME }}
+          name: hafiz-fahim-${{ env.VERSION_NAME }}
           path: out/*
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.VERSION_NAME }}
-          name: متين ${{ env.VERSION_NAME }}
+          name: حافظ فاهم ${{ env.VERSION_NAME }}
           target_commitish: ${{ github.sha }}
           make_latest: true
           files: out/*
           body: |
-            **تحميل مباشر لآخر نسخة:** https://github.com/${{ github.repository }}/releases/latest/download/mateen.apk
+            **تحميل مباشر لآخر نسخة:** https://github.com/${{ github.repository }}/releases/latest/download/hafiz-fahim.apk
 
             ${{ env.KEYSTORE_BASE64 != '' && 'نسخة موقّعة بمفتاح الإصدار.' || 'تنبيه: هذه النسخة موقّعة بمفتاح تجريبي مؤقت (لم تُضبط أسرار التوقيع بعد).' }}
 

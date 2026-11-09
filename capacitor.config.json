@@ -1,8 +1,8 @@
 {
   "appId": "com.smssdev.mateen",
-  "appName": "متين",
+  "appName": "حافظ فاهم",
   "webDir": "dist",
   "android": {
-    "backgroundColor": "#f6f1e7"
+    "backgroundColor": "#14213D"
   }
 }

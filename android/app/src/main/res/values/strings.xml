@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">متين</string>
-    <string name="title_activity_main">متين</string>
+    <string name="app_name">حافظ فاهم</string>
+    <string name="title_activity_main">حافظ فاهم</string>
     <string name="package_name">com.smssdev.mateen</string>
     <string name="custom_url_scheme">com.smssdev.mateen</string>
 </resources>

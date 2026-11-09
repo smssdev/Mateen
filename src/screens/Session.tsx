@@ -6,6 +6,8 @@ import { applyWordResults, buildQueue, dayNumber, newCard, QueueItem, schedule }
 import { getState, logAttempt, newIntroducedToday, putCard, useStore } from '../lib/store';
 import { AyahRef, Segment } from '../lib/goals';
 import { usePlayer } from '../lib/audio';
+import { LearnFlow } from '../components/LearnFlow';
+import { useSimilar, useTafsir } from '../lib/linking';
 
 interface Props {
   index: SurahMeta[];
@@ -76,6 +78,8 @@ export function Session({ index, title, segments, goalKey, practice, onExit }: P
   }, [texts, practice, segments, goalKey]);
 
   const item = queue[pos];
+  const tafsir = useTafsir(item?.surah ?? 0, item?.ayah ?? 0);
+  const similar = useSimilar(item && texts ? texts[item.surah] : undefined, item?.ayah ?? 0, index);
 
   const addMoreNew = (count: number) => {
     const progress = getState().progress;
@@ -172,7 +176,7 @@ export function Session({ index, title, segments, goalKey, practice, onExit }: P
     return (
       <div className="screen">
         {header}
-        <Summary results={results} index={index} title={title} onExit={onExit} onMore={practice ? undefined : addMoreNew} />
+        <Summary results={results} texts={texts} index={index} title={title} onExit={onExit} onMore={practice ? undefined : addMoreNew} />
       </div>
     );
   }
@@ -195,9 +199,12 @@ export function Session({ index, title, segments, goalKey, practice, onExit }: P
         </p>
       )}
       {item.phase === 'learn' ? (
-        <LearnCard
+        <LearnFlow
           key={`${pos}-learn`}
           words={words}
+          prevWords={item.ayah > 0 ? text.ayahs[item.ayah - 1] : undefined}
+          tafsir={tafsir}
+          similar={similar}
           url={url}
           autoPlay={settings.autoPlay}
           onReady={() => {
@@ -216,6 +223,9 @@ export function Session({ index, title, segments, goalKey, practice, onExit }: P
           ayahLabel={`${meta!.name} ﴿${toArabicDigits(item.ayah + 1)}﴾`}
           nextLabel={nextLabel}
           onFinish={(wrong, chainNext) => finish(wrong, chainNext && queue[pos + 1]?.phase === 'test')}
+          tafsir={tafsir}
+          similar={similar}
+          warnSimilar={settings.warnSimilar}
           footer={
             <>
               <ListenButton url={url} autoPlay={false} />
@@ -257,76 +267,16 @@ function ListenButton({ url, autoPlay }: { url: string; autoPlay: boolean }) {
   );
 }
 
-function LearnCard({
-  words,
-  url,
-  autoPlay,
-  onReady,
-}: {
-  words: string[];
-  url: string;
-  autoPlay: boolean;
-  onReady: () => void;
-}) {
-  const p = usePlayer(url);
-  const [repeat, setRepeat] = useState(3);
-  useEffect(() => {
-    if (autoPlay) p.play(repeat);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLElement && /BUTTON|SELECT|INPUT/.test(e.target.tagName)) return;
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        onReady();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onReady]);
-
-  return (
-    <div className="learn">
-      <p className="learn-hint">آية جديدة: اقرأها بتدبّر واستمع إليها وردّدها حتى تحفظها، ثم اختبر نفسك.</p>
-      <div className="ayah-words full">
-        {words.map((w, i) => (
-          <span key={i} className="word revealed">
-            {w}
-          </span>
-        ))}
-      </div>
-      <div className="controls">
-        <button className="btn ghost" onClick={() => p.toggle(repeat)}>
-          {p.status === 'playing' || p.status === 'loading' ? '■ إيقاف' : '▶ استماع'}
-        </button>
-        <label className="repeat">
-          تكرار
-          <select value={repeat} onChange={(e) => setRepeat(Number(e.target.value))}>
-            {[1, 3, 5, 10].map((n) => (
-              <option key={n} value={n}>
-                {toArabicDigits(n)}×
-              </option>
-            ))}
-          </select>
-        </label>
-        <button className="btn primary grow" onClick={onReady}>
-          حفظتُها، اختبرني
-        </button>
-      </div>
-      {p.status === 'error' && <p className="tip">تعذّر تشغيل التلاوة — تحقق من اتصالك بالإنترنت.</p>}
-    </div>
-  );
-}
-
 function Summary({
   results,
+  texts,
   index,
   title,
   onExit,
   onMore,
 }: {
   results: Result[];
+  texts: Record<number, SurahText>;
   index: SurahMeta[];
   title: string;
   onExit: () => void;
@@ -337,14 +287,18 @@ function Summary({
     const words = results.reduce((t, r) => t + r.words.length, 0);
     const mistakes = results.reduce((t, r) => t + r.wrong.filter(Boolean).length, 0);
     const perfect = firstTries.filter((r) => !r.wrong.some(Boolean)).length;
-    const stumbles = new Map<string, { surah: number; ayah: number; word: string; before: string; count: number }>();
+    const stumbles = new Map<string, { surah: number; ayah: number; word: string; before: string; count: number; fork?: string }>();
     for (const r of results) {
       r.wrong.forEach((isWrong, i) => {
         if (!isWrong) return;
         const key = `${r.surah}:${r.ayah}:${i}`;
         const prev = stumbles.get(key);
         if (prev) prev.count++;
-        else stumbles.set(key, { surah: r.surah, ayah: r.ayah, word: r.words[i], before: r.words.slice(Math.max(0, i - 2), i).join(' '), count: 1 });
+        else {
+          const ref = texts[r.surah]?.sim?.[r.ayah]?.find(([, , st, , len]) => st + len === i && len >= 3);
+          const fork = ref ? `تشتبه مع ${index[ref[0] - 1].name} ${toArabicDigits(ref[1] + 1)}` : undefined;
+          stumbles.set(key, { fork, surah: r.surah, ayah: r.ayah, word: r.words[i], before: r.words.slice(Math.max(0, i - 2), i).join(' '), count: 1 });
+        }
       });
     }
     return {
@@ -356,7 +310,7 @@ function Summary({
       perfect,
       stumbles: [...stumbles.values()].sort((a, b) => a.surah - b.surah || a.ayah - b.ayah),
     };
-  }, [results]);
+  }, [results, texts, index]);
 
   if (results.length === 0) {
     return (
@@ -399,6 +353,7 @@ function Summary({
                   {s.before && <span className="muted">{s.before} </span>}
                   <mark>{s.word}</mark>
                 </span>
+                {s.fork && <span className="fork-chip">{s.fork}</span>}
                 {s.count > 1 && <span className="muted">×{toArabicDigits(s.count)}</span>}
               </li>
             ))}

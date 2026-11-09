@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toArabicDigits } from '../lib/quran';
+import { plain, toArabicDigits } from '../lib/quran';
 import { MAX_STRENGTH } from '../lib/srs';
+import { divergenceAt, Similar } from '../lib/linking';
 
 interface Props {
   words: string[];
@@ -16,6 +17,11 @@ interface Props {
   nextLabel: (mistakes: number) => string;
   onFinish: (wrong: boolean[], chain: boolean) => void;
   footer?: React.ReactNode;
+  /** Meaning of the ayah, offered as a hint instead of revealing the word. */
+  tafsir?: string;
+  /** Look-alike verses: warns right before the word where they part ways. */
+  similar?: Similar[];
+  warnSimilar?: boolean;
 }
 
 const SWIPE_DISTANCE = 45;
@@ -27,9 +33,25 @@ const SWIPE_DISTANCE = 45;
  * When the ayah is done the bottom card turns into "next ayah"; swiping it records
  * the result and immediately reveals the first word of the next ayah.
  */
-export function CardRecall({ words, strength, errs, autoStart, prevWord, ayahLabel, nextLabel, onFinish, footer }: Props) {
+export function CardRecall({
+  words,
+  strength,
+  errs,
+  autoStart,
+  prevWord,
+  ayahLabel,
+  nextLabel,
+  onFinish,
+  footer,
+  tafsir,
+  similar = [],
+  warnSimilar = true,
+}: Props) {
   const [revealed, setRevealed] = useState(autoStart ? 1 : 0);
   const [wrong, setWrong] = useState<boolean[]>(() => words.map(() => false));
+  // hint shown for the next word: the ayah's meaning or the word's first letter
+  const [hint, setHint] = useState<'meaning' | 'letter' | null>(null);
+  const [hinted, setHinted] = useState<boolean[]>(() => words.map(() => false));
   const [drag, setDrag] = useState(0);
   const [flash, setFlash] = useState(0); // bumps on every reveal to replay the animation
   const done = revealed >= words.length;
@@ -40,10 +62,18 @@ export function CardRecall({ words, strength, errs, autoStart, prevWord, ayahLab
       onFinish(wrong, true);
       return;
     }
+    // a word recalled only with a hint is not yet held: count it as a slip
+    if (hinted[revealed]) setWrong((w) => w.map((v, j) => (j === revealed ? true : v)));
+    setHint(null);
     setRevealed((r) => Math.min(words.length, r + 1));
     setFlash((f) => f + 1);
     navigator.vibrate?.(8);
-  }, [done, onFinish, words.length, wrong]);
+  }, [done, onFinish, words.length, wrong, hinted, revealed]);
+
+  const showHint = (kind: 'meaning' | 'letter') => {
+    setHint((h) => (h === kind ? null : kind));
+    setHinted((h) => h.map((v, j) => (j === revealed ? true : v)));
+  };
 
   const toggleLast = useCallback(() => {
     if (last < 0) return;
@@ -94,6 +124,8 @@ export function CardRecall({ words, strength, errs, autoStart, prevWord, ayahLab
   const mistakes = wrong.filter(Boolean).length;
   const nextIdx = revealed;
   const label = nextLabel(mistakes);
+  const forkNext = !done && warnSimilar ? divergenceAt(similar, nextIdx) : undefined;
+  const forkLast = last >= 0 && wrong[last] ? divergenceAt(similar, last) : undefined;
 
   return (
     <div className="cards">
@@ -115,14 +147,29 @@ export function CardRecall({ words, strength, errs, autoStart, prevWord, ayahLab
           <span className="mark" aria-hidden>
             {wrong[last] ? '✕' : '✓'}
           </span>
+          {forkLast && (
+            <span className="fork-note">
+              تشتبه مع {forkLast.name} {toArabicDigits(forkLast.ayah + 1)}: هناك «{forkLast.words[forkLast.there[1]] ?? 'نهاية الآية'}»
+            </span>
+          )}
         </button>
       ) : (
         <div className="wcard top empty">{prevWord && <span className="wcard-word faded">{prevWord}</span>}</div>
       )}
 
-      <div className="swipe-hint" aria-hidden>
-        <span>↑</span>
-      </div>
+      {hint === 'meaning' && !done ? (
+        <div className="hint-box meaning-hint" role="note">
+          <b>المعنى:</b> {tafsir ?? '…'}
+        </div>
+      ) : forkNext ? (
+        <div className="fork-warn" role="note">
+          ⚠ موضع افتراق مع {forkNext.name} {toArabicDigits(forkNext.ayah + 1)} — تذكّر ما يأتي هنا بالذات
+        </div>
+      ) : (
+        <div className="swipe-hint" aria-hidden>
+          <span>↑</span>
+        </div>
+      )}
 
       {/* bottom: next hidden word (or "next ayah") */}
       <div
@@ -147,16 +194,24 @@ export function CardRecall({ words, strength, errs, autoStart, prevWord, ayahLab
         ) : (
           <>
             <CardMeta strength={strength?.[nextIdx]} />
-            <span className="wcard-hidden">؟</span>
+            <span className="wcard-hidden">{hint === 'letter' ? `${plain(words[nextIdx]).charAt(0)}ـ` : '؟'}</span>
           </>
         )}
       </div>
 
       <div className="card-tools">
         {!done && (
-          <button className="btn ghost small" onClick={giveUp}>
-            لا أذكر البقية
-          </button>
+          <>
+            <button className={`btn small hint-btn${hint === 'meaning' ? ' on' : ''}`} onClick={() => showHint('meaning')}>
+              💡 تلميح بالمعنى
+            </button>
+            <button className={`btn small${hint === 'letter' ? ' on' : ''}`} onClick={() => showHint('letter')}>
+              أول حرف
+            </button>
+            <button className="btn ghost small" onClick={giveUp}>
+              لا أذكر البقية
+            </button>
+          </>
         )}
         {footer}
       </div>

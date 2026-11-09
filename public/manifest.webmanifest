@@ -1,18 +1,20 @@
 {
-  "name": "متين — حفظ القرآن الكريم",
-  "short_name": "متين",
-  "description": "احفظ القرآن كلمة كلمة وثبّته بمراجعة ذكية متباعدة.",
+  "name": "حافظ فاهم — حفظ القرآن بالفهم",
+  "short_name": "حافظ فاهم",
+  "description": "احفظ القرآن الكريم بالربط اللفظي والمعنوي، وثبّته بمراجعة ذكية متباعدة.",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "/",
-  "scope": "/",
+  "id": "./app/",
+  "start_url": "./app/",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f6f1e7",
-  "theme_color": "#0f5c4d",
+  "background_color": "#FBF7EF",
+  "theme_color": "#14213D",
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" },
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "brand/app-icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "brand/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "brand/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

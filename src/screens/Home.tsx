@@ -32,8 +32,11 @@ export function Home({ index, parts, onStart, onOpen }: Props) {
       <section className="hero">
         <div className="hero-top">
           <div>
-            <h1>متين</h1>
-            <p>احفظ القرآن كلمةً كلمة، وثبّته بمراجعة ذكية.</p>
+            <h1>
+              <img src={`${import.meta.env.BASE_URL}brand/mark.svg`} alt="" />
+              حافظ فاهم
+            </h1>
+            <p>افهم الآية، واربطها بما قبلها، ثم احفظها كلمةً كلمة.</p>
           </div>
         </div>
         <MasteryDonut counts={levels} total={totalWords} />

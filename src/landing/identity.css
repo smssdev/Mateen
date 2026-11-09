@@ -1,0 +1,154 @@
+.id-hero {
+  padding: 80px 0;
+}
+.id-logos {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: 1.2fr 1.2fr 0.8fr;
+  gap: 16px;
+}
+.id-logos figure {
+  margin: 0;
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  padding: 40px;
+  min-height: 240px;
+}
+.id-logos .dark {
+  background: var(--ink);
+}
+.id-logos .light {
+  background: #fbf7ef;
+  border: 1px solid var(--line);
+}
+.id-logos .light img {
+  filter: none;
+}
+.id-logos .icon {
+  background: var(--sand);
+}
+.id-logos .icon img {
+  width: 150px;
+}
+.id-meaning {
+  margin-top: 24px;
+  display: grid;
+  gap: 6px;
+}
+.id-meaning p {
+  margin: 0;
+}
+.sw {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-inline-end: 8px;
+}
+.muted {
+  color: var(--muted);
+}
+.id-wordmarks {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.wm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  border-radius: var(--radius);
+  padding: 34px;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+}
+.wm img {
+  width: 90px;
+}
+.wm.dark {
+  background: var(--ink);
+  color: #fbf7ef;
+}
+.wm.light {
+  background: #fbf7ef;
+  color: #14213d;
+  border: 1px solid var(--line);
+}
+.id-rules {
+  margin: 24px 0 0;
+  color: var(--muted);
+}
+.id-downloads a {
+  color: var(--gold-deep);
+}
+.id-colors {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.id-colors .c {
+  background: var(--c);
+  color: var(--t);
+  border-radius: var(--radius);
+  padding: 24px;
+  min-height: 170px;
+  display: grid;
+  align-content: end;
+  gap: 2px;
+  border: 1px solid rgb(0 0 0 / 0.06);
+}
+.id-colors b {
+  font-family: var(--display);
+  font-size: 1.3rem;
+}
+.id-colors code {
+  font-size: 1rem;
+  direction: ltr;
+  text-align: right;
+}
+.id-colors small {
+  opacity: 0.85;
+}
+.id-type {
+  margin-top: 28px;
+  display: grid;
+  gap: 18px;
+}
+.id-type > div {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 26px;
+}
+.id-type small {
+  color: var(--muted);
+}
+.id-type p {
+  margin: 6px 0 0;
+}
+.t-display {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+.t-ui {
+  font-size: 1.25rem;
+}
+.t-quran {
+  font-family: var(--q-font);
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 2;
+}
+@media (max-width: 760px) {
+  .id-logos,
+  .id-wordmarks,
+  .id-colors {
+    grid-template-columns: 1fr;
+  }
+}

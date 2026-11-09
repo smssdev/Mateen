@@ -3,15 +3,297 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f5c4d" />
-    <meta name="description" content="متين — احفظ القرآن الكريم كلمة كلمة وثبّته بمراجعة ذكية متباعدة." />
-    <title>متين — حفظ القرآن</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <meta name="theme-color" content="#14213D" />
+    <title>حافظ فاهم — احفظ القرآن وافهم ما تحفظ</title>
+    <meta
+      name="description"
+      content="حافظ فاهم: منصة لحفظ القرآن الكريم وتحفيظه بالربط اللفظي والمعنوي — افهم الآية، واربطها بما قبلها، وسمّعها كلمة كلمة، مع مراجعة ذكية تركّز على مواضع ضعفك. مجاني ويعمل دون إنترنت."
+    />
+    <meta property="og:title" content="حافظ فاهم — احفظ القرآن وافهم ما تحفظ" />
+    <meta property="og:description" content="حفظ القرآن الكريم بالربط اللفظي والمعنوي، مع تسميع كلمة كلمة ومراجعة ذكية." />
+    <meta property="og:image" content="./brand/icon-512.png" />
+    <meta property="og:locale" content="ar_AR" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/brand/app-icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/brand/icon-192.png" />
+    <script>
+      // Inside the Android app the landing page is skipped.
+      if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+        location.replace('./app/');
+      }
+    </script>
   </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <body class="landing">
+    <a class="skip" href="#main">تخطَّ إلى المحتوى</a>
+
+    <header class="nav" id="top">
+      <div class="wrap nav-in">
+        <a class="logo" href="./" aria-label="حافظ فاهم — الرئيسية">
+          <img src="/brand/mark.svg" alt="" width="52" height="37" />
+          <span>حافظ فاهم</span>
+        </a>
+        <nav class="nav-links" aria-label="أقسام الصفحة">
+          <a href="#method">المنهج</a>
+          <a href="#journey">رحلة الآية</a>
+          <a href="#features">المزايا</a>
+          <a href="#download">التحميل</a>
+        </nav>
+        <a class="btn-cta small" href="./app/">ابدأ الحفظ</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- ============ HERO ============ -->
+      <section class="hero">
+        <div class="pattern" aria-hidden="true"></div>
+        <div class="wrap hero-in">
+          <div class="hero-copy">
+            <p class="eyebrow">منهج الربط اللفظي والمعنوي</p>
+            <h1>احفظ القرآن<br /><span class="hl">وافهم</span> ما تحفظ</h1>
+            <p class="lead">
+              «حافظ فاهم» يبني حفظك على الفهم: تقرأ معنى الآية أولًا، وتربطها بما قبلها وبما يشبهها، ثم تسمّعها كلمةً كلمة
+              — ويعيد عليك مواضع ضعفك حتى تثبت.
+            </p>
+            <div class="ctas">
+              <a class="btn-cta" href="./app/">ابدأ الآن — مجانًا</a>
+              <a class="btn-ghost" href="https://github.com/smssdev/Mateen/releases/latest/download/hafiz-fahim.apk">
+                <span aria-hidden="true">⬇</span> تطبيق أندرويد
+              </a>
+            </div>
+            <ul class="trust">
+              <li>بلا حساب ولا إعلانات</li>
+              <li>يعمل دون إنترنت</li>
+              <li>مفتوح المصدر</li>
+            </ul>
+          </div>
+
+          <!-- live demo -->
+          <div class="phone" aria-label="تجربة تفاعلية للتسميع">
+            <div class="phone-screen">
+              <div class="demo-head">
+                <span class="demo-badge">جرّبها الآن</span>
+                <span class="demo-ref" id="demo-ref">الفاتحة ﴿١﴾</span>
+              </div>
+              <div class="demo-top" id="demo-top"><span class="faded">اضغط البطاقة بالأسفل</span></div>
+              <div class="demo-hint" id="demo-hint" hidden></div>
+              <button class="demo-card" id="demo-card" type="button" aria-label="اكشف الكلمة التالية">
+                <span class="q">؟</span>
+                <small>تذكّر الكلمة ثم اضغط لكشفها</small>
+              </button>
+              <div class="demo-tools">
+                <button type="button" id="demo-meaning">💡 تلميح بالمعنى</button>
+                <button type="button" id="demo-wrong" disabled>✗ أخطأت</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ METHOD ============ -->
+      <section class="section" id="method">
+        <div class="wrap">
+          <p class="kicker">المنهج</p>
+          <h2>حلقتان متشابكتان: <span class="gold">اللفظ</span> و<span class="jade">المعنى</span></h2>
+          <p class="sub">
+            أكثر ما يُنسي الحافظَ انقطاعُ الصلة بين الآيات وتشابهُ ألفاظها. لذلك يربط «حافظ فاهم» كل آية بمعناها، وبما
+            قبلها، وبما يشبهها — فيتماسك المحفوظ كما تتماسك حلقات السلسلة.
+          </p>
+
+          <div class="pillars">
+            <article class="pillar gold-side">
+              <h3><span class="dot" aria-hidden="true"></span>الربط اللفظي</h3>
+              <ul>
+                <li><b>حلقة الوصل:</b> آخر الآية موصولًا بأول ما بعدها، فلا تتوقف عند الانتقال.</li>
+                <li><b>المتشابهات:</b> يعرض الآيات المتشابهة ويحدّد الكلمة التي تفترق عندها بالضبط.</li>
+                <li><b>دقّة الكلمة:</b> التسميع كلمةً كلمة يكشف فروقًا مثل «عليك/إليك» و«أتيناهم/آتيناهم».</li>
+              </ul>
+            </article>
+
+            <div class="rings" aria-hidden="true">
+              <img src="/brand/mark.svg" alt="" width="260" height="183" />
+            </div>
+
+            <article class="pillar jade-side">
+              <h3><span class="dot" aria-hidden="true"></span>الربط المعنوي</h3>
+              <ul>
+                <li><b>افهم قبل أن تحفظ:</b> كل آية جديدة تبدأ بمعناها من التفسير الميسّر.</li>
+                <li><b>تلميح بالمعنى:</b> إذا توقفت أثناء التسميع يذكّرك بالمعنى بدل أن يكشف الكلمة.</li>
+                <li><b>ترابط السياق:</b> بلا صفحات ولا أسطر، فيعتمد حفظك على المعنى لا على شكل الصفحة.</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ JOURNEY ============ -->
+      <section class="section alt" id="journey">
+        <div class="wrap">
+          <p class="kicker">رحلة كل آية</p>
+          <h2>أربع خطوات… ثم مراجعة في الوقت المناسب</h2>
+          <ol class="steps">
+            <li>
+              <span class="num">١</span>
+              <h3>افهم</h3>
+              <p>تقرأ المعنى الميسّر للآية قبل حفظها، فيكون للفظ في ذهنك صورة.</p>
+            </li>
+            <li>
+              <span class="num">٢</span>
+              <h3>اربط</h3>
+              <p>تصل آخر الآية السابقة بأول هذه، وتتعرّف على ما يشبهها وأين يفترقان.</p>
+            </li>
+            <li>
+              <span class="num">٣</span>
+              <h3>ردّد</h3>
+              <p>تستمع إلى الآية بصوت كبار القرّاء وتردّدها بالتكرار الذي تختاره.</p>
+            </li>
+            <li>
+              <span class="num">٤</span>
+              <h3>سمّع</h3>
+              <p>تتذكّر كل كلمة ثم تكشفها؛ وتعلّم ما أخطأت فيه بلمسة.</p>
+            </li>
+          </ol>
+          <div class="srs-note">
+            <strong>والمراجعة؟</strong> يعرف التطبيق قوّة حفظك لكل كلمة، فيعيد عليك الآيات الضعيفة كثيرًا ويباعد بين
+            المتقنة — تراجع ما تحتاجه فقط، كل يوم.
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ MUTASHABIHAT EXAMPLE ============ -->
+      <section class="section" id="similar">
+        <div class="wrap">
+          <p class="kicker">مثال حقيقي من المتشابهات</p>
+          <h2>آيتان تتطابقان… حتى كلمة واحدة</h2>
+          <p class="sub">هنا يتعثّر كثير من الحفّاظ. يعرض «حافظ فاهم» موضع الافتراق وينبّهك قبله أثناء التسميع.</p>
+          <div class="fork-demo" id="fork-demo">
+            <div class="fork-row"><span class="ref">البقرة ٤٨</span><p class="q" id="fork-a">…</p></div>
+            <div class="fork-row"><span class="ref">البقرة ١٢٣</span><p class="q" id="fork-b">…</p></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FEATURES ============ -->
+      <section class="section alt" id="features">
+        <div class="wrap">
+          <p class="kicker">المزايا</p>
+          <h2>كل ما تحتاجه للحفظ والتثبيت</h2>
+          <div class="grid">
+            <article><span class="ico">🎯</span><h3>تسميع بالبطاقات</h3><p>كلمة واحدة في كل مرة: تذكّر، ثم اسحب للأعلى، ثم انتقل مباشرة إلى الآية التالية.</p></article>
+            <article><span class="ico">🧠</span><h3>مراجعة متباعدة ذكية</h3><p>جدولة لكل آية مبنية على قوة حفظك لكل كلمة، مع إعادة الآية في الجلسة نفسها إن أخطأت.</p></article>
+            <article><span class="ico">📖</span><h3>التفسير الميسّر</h3><p>معنى كل آية في متناولك أثناء الحفظ والتسميع، دون مغادرة التطبيق.</p></article>
+            <article><span class="ico">🔗</span><h3>المتشابهات</h3><p>اكتشاف آلي لأكثر من ٢٧٠٠ آية لها نظائر، مع تحديد كلمة الافتراق.</p></article>
+            <article><span class="ico">🗂️</span><h3>السور والأجزاء والأحزاب</h3><p>احفظ بالسورة أو بالجزء أو بتحزيب الصحابة «فمي بشوق».</p></article>
+            <article><span class="ico">🎧</span><h3>تلاوات كبار القرّاء</h3><p>الحصري والمنشاوي والعفاسي وعبد الباسط، مع تكرار الآية.</p></article>
+            <article><span class="ico">📊</span><h3>نسبة حفظك من القرآن</h3><p>رسم يبيّن ما تحفظه بمستوياته: متين، متوسط، ابتدائي، تعريفي.</p></article>
+            <article><span class="ico">📶</span><h3>بلا إنترنت وبلا حساب</h3><p>النص والتفسير محفوظان على جهازك، وتقدّمك لك وحدك، مع نسخة احتياطية.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ AYAH ============ -->
+      <section class="quote">
+        <div class="pattern" aria-hidden="true"></div>
+        <div class="wrap">
+          <p class="q" id="quote">…</p>
+          <p class="ref">سورة ص — الآية ٢٩</p>
+          <p class="note">التدبّر والتذكّر معًا: هذا ما نعنيه بأن تكون <b>حافظًا فاهمًا</b>.</p>
+        </div>
+      </section>
+
+      <!-- ============ AUDIENCE ============ -->
+      <section class="section" id="for-whom">
+        <div class="wrap two">
+          <article class="card">
+            <h3>للطالب</h3>
+            <p>
+              اختر سورة أو جزءًا، وسيعطيك التطبيق كل يوم مراجعتك ثم وردك الجديد. لا جداول تحتار فيها، ولا وقت يضيع في
+              مراجعة ما تتقنه.
+            </p>
+          </article>
+          <article class="card">
+            <h3>للمحفّظ والحلقة</h3>
+            <p>
+              يشارك الطالب تقرير تقدّمه بلمسة: ما حفظه، ونسبة إتقانه، ومواضع تعثّره — فيعرف المعلّم أين يركّز في
+              التسميع.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============ DOWNLOAD ============ -->
+      <section class="section alt" id="download">
+        <div class="wrap">
+          <p class="kicker">ابدأ الآن</p>
+          <h2>على كل أجهزتك</h2>
+          <div class="dl">
+            <a class="dl-card primary" href="./app/">
+              <span class="ico">🌐</span>
+              <b>في المتصفح</b>
+              <small>يعمل مباشرة على الجوال والحاسوب</small>
+            </a>
+            <a class="dl-card" href="https://github.com/smssdev/Mateen/releases/latest/download/hafiz-fahim.apk">
+              <span class="ico">🤖</span>
+              <b>أندرويد</b>
+              <small>تحميل مباشر لملف APK</small>
+            </a>
+            <a class="dl-card" href="./app/">
+              <span class="ico">📱</span>
+              <b>آيفون</b>
+              <small>افتحه في Safari ثم «إضافة إلى الشاشة الرئيسية»</small>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ FAQ ============ -->
+      <section class="section" id="faq">
+        <div class="wrap narrow">
+          <h2>أسئلة شائعة</h2>
+          <details>
+            <summary>هل التطبيق مجاني؟</summary>
+            <p>نعم، مجاني بالكامل وبلا إعلانات، وشيفرته مفتوحة على GitHub.</p>
+          </details>
+          <details>
+            <summary>هل يعمل دون إنترنت؟</summary>
+            <p>نعم. نص المصحف والتفسير محفوظان في التطبيق. وحدها التلاوات الصوتية تحتاج اتصالًا.</p>
+          </details>
+          <details>
+            <summary>أين يُحفظ تقدّمي؟</summary>
+            <p>على جهازك فقط، دون حساب. ويمكنك تصدير نسخة احتياطية ونقلها إلى جهاز آخر من الإعدادات.</p>
+          </details>
+          <details>
+            <summary>ما مصدر النص والتفسير؟</summary>
+            <p>
+              نص المصحف بالرسم العثماني من مشروع تنزيل دون أي تعديل، والتفسير من «التفسير الميسّر» الصادر عن مجمع الملك
+              فهد لطباعة المصحف الشريف، والتلاوات من everyayah.com.
+            </p>
+          </details>
+          <details>
+            <summary>كيف يختلف عن قراءة المصحف وتكراره؟</summary>
+            <p>
+              التكرار يرسّخ الصورة البصرية للصفحة وهي سريعة النسيان. أما التذكّر الفعّال للكلمة مع فهم معناها وربطها
+              بسياقها فيرسّخ الحفظ في الذاكرة البعيدة، ويكشف لك المواضع الدقيقة التي تخطئ فيها.
+            </p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="wrap foot-in">
+        <a class="logo light" href="#top">
+          <img src="/brand/mark.svg" alt="" width="44" height="31" />
+          <span>حافظ فاهم</span>
+        </a>
+        <nav aria-label="روابط">
+          <a href="./app/">التطبيق</a>
+          <a href="./identity/">الهوية البصرية</a>
+          <a href="https://github.com/smssdev/Mateen">GitHub</a>
+        </nav>
+        <p class="small">النص: مشروع تنزيل · التفسير: التفسير الميسّر — مجمع الملك فهد · التلاوات: everyayah.com</p>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/landing/main.ts"></script>
   </body>
 </html>

@@ -10,7 +10,7 @@ export function Settings() {
     const blob = new Blob([JSON.stringify(getState())], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `mateen-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `hafiz-fahim-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
@@ -80,6 +80,14 @@ export function Settings() {
 
         <label className="row">
           <span>
+            تنبيه المتشابهات
+            <small>ينبّهك قبل الكلمة التي تفترق عندها الآية عن آية تشبهها.</small>
+          </span>
+          <input type="checkbox" checked={s.warnSimilar} onChange={(e) => set('warnSimilar', e.target.checked)} />
+        </label>
+
+        <label className="row">
+          <span>
             عرض نهاية الآية السابقة
             <small>يساعدك على ربط الآيات بالمعنى كما تُتلى.</small>
           </span>
@@ -140,25 +148,25 @@ export function Settings() {
         </button>
       </div>
 
-      <h3>كيف يعمل التطبيق؟</h3>
+      <h3>منهج «حافظ فاهم»</h3>
       <ul className="about">
         <li>
-          <b>تذكّر ثم اكشف:</b> بدل تكرار القراءة، تحاول تذكّر كل كلمة قبل كشفها، فيتنبّه ذهنك وتتمكّن الآيات من
-          الذاكرة البعيدة.
+          <b>افهم قبل أن تحفظ:</b> تبدأ كل آية جديدة بمعناها من التفسير الميسّر، فيُبنى الحفظ على الفهم.
         </li>
         <li>
-          <b>جدولة ذكية:</b> يعرف التطبيق مستوى حفظك لكل كلمة، فيعيد عليك الآيات الضعيفة كثيرًا ويباعد بين الآيات
-          المتقنة.
+          <b>الربط المعنوي:</b> إن توقفت أثناء التسميع فاطلب «تلميح المعنى» بدل كشف الكلمة، فيقودك الفهم إلى اللفظ.
         </li>
         <li>
-          <b>بلا قرائن بصرية:</b> لا صفحات ولا أسطر؛ تُعرض الآية وحدها حتى يعتمد حفظك على المعنى وترابط الآيات.
+          <b>الربط اللفظي:</b> «حلقة الوصل» تربط آخر الآية بأول ما بعدها، وتنبيهات المتشابهات تريك أين تفترق الآيات
+          المتشابهة.
         </li>
         <li>
-          <b>دقة الكلمة:</b> يكشف لك المواضع الدقيقة للخطأ مثل «عليك/إليك» و«أتيناهم/آتيناهم».
+          <b>تذكّر ثم اكشف:</b> بدل تكرار القراءة، تتذكّر كل كلمة قبل كشفها، ويعيد عليك التطبيق مواضع ضعفك أكثر من غيرها.
         </li>
       </ul>
       <p className="muted small">
-        نص المصحف: الرسم العثماني من مشروع تنزيل (tanzil.net) دون تعديل. التلاوات من everyayah.com.
+        نص المصحف: الرسم العثماني من مشروع تنزيل (tanzil.net) دون تعديل. التفسير: التفسير الميسّر — مجمع الملك فهد
+        لطباعة المصحف الشريف. التلاوات من everyayah.com.
       </p>
     </div>
   );

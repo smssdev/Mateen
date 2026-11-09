@@ -14,6 +14,8 @@ export interface Settings {
   theme: 'auto' | 'light' | 'dark';
   /** cards: one word at a time (swipe up); ayah: whole ayah with blanks */
   mode: 'cards' | 'ayah';
+  /** warn right before the word where a look-alike verse parts ways */
+  warnSimilar: boolean;
 }
 
 export interface DayLog {
@@ -44,6 +46,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoPlay: false,
   theme: 'auto',
   mode: 'cards',
+  warnSimilar: true,
 };
 
 const KEY = 'mateen:v1';
