@@ -49,6 +49,17 @@ export function Settings() {
         </label>
 
         <label className="row">
+          <span>
+            طريقة التسميع
+            <small>البطاقات: كلمة واحدة في كل مرة تسحبها للأعلى. الآية: الآية كاملة بفراغات.</small>
+          </span>
+          <select value={s.mode} onChange={(e) => set('mode', e.target.value as S['mode'])}>
+            <option value="cards">بطاقات (كلمة كلمة)</option>
+            <option value="ayah">الآية كاملة</option>
+          </select>
+        </label>
+
+        <label className="row">
           <span>القارئ</span>
           <select value={s.reciter} onChange={(e) => set('reciter', e.target.value)}>
             {RECITERS.map((r) => (
@@ -77,7 +88,7 @@ export function Settings() {
 
         <label className="row">
           <span>
-            إظهار طول الكلمة المخفية
+            إظهار طول الكلمة المخفية (طريقة الآية)
             <small>الفراغ بقدر طول الكلمة، فلا تتحرك الكلمات أثناء التمرير. أطفئه لتحدٍّ أصعب.</small>
           </span>
           <input type="checkbox" checked={s.hintLength} onChange={(e) => set('hintLength', e.target.checked)} />

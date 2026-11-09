@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { WordRecall } from '../components/WordRecall';
+import { CardRecall } from '../components/CardRecall';
 import { audioUrl, loadSurah, SurahMeta, SurahText, toArabicDigits } from '../lib/quran';
 import { applyWordResults, buildQueue, dayNumber, newCard, QueueItem, schedule } from '../lib/srs';
 import { getState, logAttempt, newIntroducedToday, putCard, useStore } from '../lib/store';
@@ -34,6 +35,9 @@ export function Session({ meta, practice, onExit }: Props) {
   const [queue, setQueue] = useState<Item[]>([]);
   const [pos, setPos] = useState(0);
   const [results, setResults] = useState<Result[]>([]);
+  // true when the swipe that finished the previous ayah should also reveal the next one
+  const [chain, setChain] = useState(false);
+  const todayWords = useStore((s) => s.log[dayNumber()]?.words ?? 0);
 
   useEffect(() => {
     loadSurah(meta.n).then(setText, (e: Error) => setError(e.message));
@@ -69,7 +73,7 @@ export function Session({ meta, practice, onExit }: Props) {
     setQueue((q) => [...q, ...extra]);
   };
 
-  const finish = (wrong: boolean[]) => {
+  const finish = (wrong: boolean[], chainNext = false) => {
     if (!item || !text) return;
     const words = text.ayahs[item.ayah];
     const mistakes = wrong.filter(Boolean).length;
@@ -101,8 +105,15 @@ export function Session({ meta, practice, onExit }: Props) {
         return next;
       });
     }
+    setChain(chainNext);
     setPos((p) => p + 1);
     window.scrollTo({ top: 0 });
+  };
+
+  const nextLabel = (mistakes: number) => {
+    const next = queue[pos + 1];
+    if (next) return next.kind === 'new' && next.attempt === 0 ? `آية جديدة: ${toArabicDigits(next.ayah + 1)}` : `الآية ${toArabicDigits(next.ayah + 1)}`;
+    return mistakes > 0 && item && item.attempt + 1 < MAX_ATTEMPTS ? 'إعادة الآية' : 'إنهاء الجلسة';
   };
 
   if (error) {
@@ -146,11 +157,13 @@ export function Session({ meta, practice, onExit }: Props) {
   const card = getState().progress[meta.n]?.[item.ayah];
   const context =
     settings.showContext && item.ayah > 0 ? text.ayahs[item.ayah - 1].slice(-6).join(' ') : '';
+  const cards = settings.mode === 'cards';
+  const url = audioUrl(settings.reciter, meta.n, item.ayah);
 
   return (
-    <div className="screen session" style={{ ['--q-scale' as string]: settings.fontScale }}>
+    <div className={`screen session${cards ? ' card-mode' : ''}`} style={{ ['--q-scale' as string]: settings.fontScale }}>
       {header}
-      {context && (
+      {context && !(cards && item.phase === 'test') && (
         <p className="context">
           {text.ayahs[item.ayah - 1].length > 6 && '… '}
           {context}
@@ -160,9 +173,30 @@ export function Session({ meta, practice, onExit }: Props) {
         <LearnCard
           key={`${pos}-learn`}
           words={words}
-          url={audioUrl(settings.reciter, meta.n, item.ayah)}
+          url={url}
           autoPlay={settings.autoPlay}
-          onReady={() => setQueue((q) => q.map((x, i) => (i === pos ? { ...x, phase: 'test' } : x)))}
+          onReady={() => {
+            setChain(false);
+            setQueue((q) => q.map((x, i) => (i === pos ? { ...x, phase: 'test' } : x)));
+          }}
+        />
+      ) : cards ? (
+        <CardRecall
+          key={`${pos}-cards`}
+          words={words}
+          strength={card?.w}
+          errs={card?.errs}
+          autoStart={chain}
+          prevWord={item.ayah > 0 ? text.ayahs[item.ayah - 1].at(-1) : undefined}
+          ayahLabel={`${meta.name} ﴿${toArabicDigits(item.ayah + 1)}﴾`}
+          nextLabel={nextLabel}
+          onFinish={(wrong, chainNext) => finish(wrong, chainNext && queue[pos + 1]?.phase === 'test')}
+          footer={
+            <>
+              <ListenButton url={url} autoPlay={false} />
+              <span className="muted small">اليوم: {toArabicDigits(todayWords)} كلمة</span>
+            </>
+          }
         />
       ) : (
         <WordRecall
@@ -172,7 +206,7 @@ export function Session({ meta, practice, onExit }: Props) {
           hintLength={settings.hintLength}
           onFinish={finish}
           finishLabel={pos + 1 < queue.length ? 'التالي ←' : 'إنهاء'}
-          extraActions={<ListenButton url={audioUrl(settings.reciter, meta.n, item.ayah)} autoPlay={settings.autoPlay} />}
+          extraActions={<ListenButton url={url} autoPlay={settings.autoPlay} />}
         />
       )}
     </div>

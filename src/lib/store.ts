@@ -9,6 +9,8 @@ export interface Settings {
   reciter: string;
   autoPlay: boolean;
   theme: 'auto' | 'light' | 'dark';
+  /** cards: one word at a time (swipe up); ayah: whole ayah with blanks */
+  mode: 'cards' | 'ayah';
 }
 
 export interface DayLog {
@@ -43,6 +45,7 @@ export const DEFAULT_SETTINGS: Settings = {
   reciter: 'Husary_128kbps',
   autoPlay: false,
   theme: 'auto',
+  mode: 'cards',
 };
 
 const KEY = 'mateen:v1';
