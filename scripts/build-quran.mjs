@@ -59,4 +59,19 @@ for (const s of surahs) {
 }
 
 writeFileSync(join(outDir, 'index.json'), JSON.stringify(index));
+
+// Juz and manzil (the companions' seven-part division) boundaries as
+// [surah, firstAyah, surah, lastAyah] with 1-based ayah numbers.
+const bounds = (key) => {
+  const out = [];
+  for (const s of surahs) {
+    for (const a of s.ayahs) {
+      const k = a[key];
+      if (!out[k - 1]) out[k - 1] = [s.number, a.numberInSurah, s.number, a.numberInSurah];
+      else out[k - 1].splice(2, 2, s.number, a.numberInSurah);
+    }
+  }
+  return out;
+};
+writeFileSync(join(outDir, 'parts.json'), JSON.stringify({ juz: bounds('juz'), manzil: bounds('manzil') }));
 console.log(`wrote ${index.length} surahs, ${total} ayahs to ${outDir}`);

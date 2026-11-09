@@ -62,3 +62,17 @@ export function audioUrl(reciter: string, surah: number, ayahIndex: number): str
   const pad = (n: number) => String(n).padStart(3, '0');
   return `https://everyayah.com/data/${reciter}/${pad(surah)}${pad(ayahIndex + 1)}.mp3`;
 }
+
+/** [surah, firstAyah, surah, lastAyah] (1-based) for every juz and manzil. */
+export interface Parts {
+  juz: [number, number, number, number][];
+  manzil: [number, number, number, number][];
+}
+let partsPromise: Promise<Parts> | undefined;
+export function loadParts(): Promise<Parts> {
+  partsPromise ??= fetch(`${base}quran/parts.json`).then((r) => {
+    if (!r.ok) throw new Error('تعذر تحميل الأجزاء');
+    return r.json();
+  });
+  return partsPromise;
+}

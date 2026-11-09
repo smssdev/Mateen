@@ -4,12 +4,18 @@ import { CardRecall } from '../components/CardRecall';
 import { audioUrl, loadSurah, SurahMeta, SurahText, toArabicDigits } from '../lib/quran';
 import { applyWordResults, buildQueue, dayNumber, newCard, QueueItem, schedule } from '../lib/srs';
 import { getState, logAttempt, newIntroducedToday, putCard, useStore } from '../lib/store';
+import { AyahRef, Segment } from '../lib/goals';
 import { usePlayer } from '../lib/audio';
 
 interface Props {
-  meta: SurahMeta;
+  index: SurahMeta[];
+  title: string;
+  /** The ayah ranges of the goal (daily mode). */
+  segments?: Segment[];
+  /** Goal id, used to count today's new ayahs. */
+  goalKey?: string;
   /** When given, practise exactly these ayahs without touching the schedule. */
-  practice?: number[];
+  practice?: AyahRef[];
   onExit: () => void;
 }
 
@@ -19,6 +25,7 @@ interface Item extends QueueItem {
 }
 
 interface Result {
+  surah: number;
   ayah: number;
   words: string[];
   wrong: boolean[];
@@ -28,8 +35,8 @@ interface Result {
 const REQUEUE_GAP = 3;
 const MAX_ATTEMPTS = 3;
 
-export function Session({ meta, practice, onExit }: Props) {
-  const [text, setText] = useState<SurahText>();
+export function Session({ index, title, segments, goalKey, practice, onExit }: Props) {
+  const [texts, setTexts] = useState<Record<number, SurahText>>();
   const [error, setError] = useState('');
   const settings = useStore((s) => s.settings);
   const [queue, setQueue] = useState<Item[]>([]);
@@ -39,62 +46,75 @@ export function Session({ meta, practice, onExit }: Props) {
   const [chain, setChain] = useState(false);
   const todayWords = useStore((s) => s.log[dayNumber()]?.words ?? 0);
 
+  const surahs = useMemo(
+    () => [...new Set((practice ?? segments ?? []).map((x) => x.surah))],
+    [practice, segments],
+  );
+
   useEffect(() => {
-    loadSurah(meta.n).then(setText, (e: Error) => setError(e.message));
-  }, [meta.n]);
+    Promise.all(surahs.map(loadSurah)).then(
+      (all) => setTexts(Object.fromEntries(all.map((t) => [t.n, t]))),
+      (e: Error) => setError(e.message),
+    );
+  }, [surahs]);
 
   // Build the queue once, from the state at the moment the session starts.
   useEffect(() => {
-    if (!text) return;
+    if (!texts) return;
     const s = getState();
-    const cards = s.progress[meta.n] ?? {};
     const base: QueueItem[] = practice
-      ? practice.map((ayah) => ({ ayah, kind: 'review' as const }))
+      ? practice.map((r) => ({ ...r, kind: 'review' as const }))
       : buildQueue(
-          cards,
-          meta.ayahs,
+          s.progress,
+          segments ?? [],
           dayNumber(),
-          Math.max(0, s.settings.newPerDay - newIntroducedToday(s, meta.n)),
+          Math.max(0, s.settings.newPerDay - newIntroducedToday(s, goalKey ?? '')),
         );
     setQueue(base.map((q) => ({ ...q, attempt: 0, phase: q.kind === 'new' ? 'learn' : 'test' })));
     setPos(0);
     setResults([]);
-  }, [text, meta.n, meta.ayahs, practice]);
+  }, [texts, practice, segments, goalKey]);
 
   const item = queue[pos];
 
   const addMoreNew = (count: number) => {
-    const cards = getState().progress[meta.n] ?? {};
-    const inQueue = new Set(queue.map((q) => q.ayah));
+    const progress = getState().progress;
+    const inQueue = new Set(queue.map((q) => `${q.surah}:${q.ayah}`));
     const extra: Item[] = [];
-    for (let i = 0; i < meta.ayahs && extra.length < count; i++) {
-      if (!cards[i] && !inQueue.has(i)) extra.push({ ayah: i, kind: 'new', attempt: 0, phase: 'learn' });
+    for (const seg of segments ?? []) {
+      for (let i = seg.from; i <= seg.to && extra.length < count; i++) {
+        if (!progress[seg.surah]?.[i] && !inQueue.has(`${seg.surah}:${i}`))
+          extra.push({ surah: seg.surah, ayah: i, kind: 'new', attempt: 0, phase: 'learn' });
+      }
     }
     setQueue((q) => [...q, ...extra]);
   };
 
   const finish = (wrong: boolean[], chainNext = false) => {
-    if (!item || !text) return;
-    const words = text.ayahs[item.ayah];
+    if (!item || !texts) return;
+    const words = texts[item.surah].ayahs[item.ayah];
     const mistakes = wrong.filter(Boolean).length;
     const today = dayNumber();
-    const existing = getState().progress[meta.n]?.[item.ayah];
+    const existing = getState().progress[item.surah]?.[item.ayah];
 
     if (!practice && item.attempt === 0) {
       const card = schedule(existing ?? newCard(words.length, today), wrong, today);
-      putCard(meta.n, item.ayah, card);
+      putCard(item.surah, item.ayah, card);
       logAttempt({
         words: words.length,
         mistakes,
         review: item.kind === 'review',
-        learnedSurah: item.kind === 'new' ? meta.n : undefined,
+        learnedGoal: item.kind === 'new' ? goalKey : undefined,
       });
     } else {
-      if (existing) putCard(meta.n, item.ayah, applyWordResults(existing, wrong));
+      if (existing) putCard(item.surah, item.ayah, applyWordResults(existing, wrong));
       logAttempt({ words: words.length, mistakes });
     }
 
-    setResults((r) => [...r, { ayah: item.ayah, words, wrong, kind: practice ? 'practice' : item.kind }]);
+    setResults((r) => [
+      ...r,
+      { surah: item.surah, ayah: item.ayah, words, wrong, kind: practice ? 'practice' : item.kind },
+    ]);
 
     // Ayahs with mistakes come back a few cards later in the same session.
     if (mistakes > 0 && item.attempt + 1 < MAX_ATTEMPTS) {
@@ -110,9 +130,12 @@ export function Session({ meta, practice, onExit }: Props) {
     window.scrollTo({ top: 0 });
   };
 
+  const ayahName = (q: { surah: number; ayah: number }) =>
+    `${q.surah !== item?.surah ? `${index[q.surah - 1].name} ` : 'الآية '}${toArabicDigits(q.ayah + 1)}`;
+
   const nextLabel = (mistakes: number) => {
     const next = queue[pos + 1];
-    if (next) return next.kind === 'new' && next.attempt === 0 ? `آية جديدة: ${toArabicDigits(next.ayah + 1)}` : `الآية ${toArabicDigits(next.ayah + 1)}`;
+    if (next) return next.kind === 'new' && next.attempt === 0 ? `آية جديدة: ${ayahName(next)}` : ayahName(next);
     return mistakes > 0 && item && item.attempt + 1 < MAX_ATTEMPTS ? 'إعادة الآية' : 'إنهاء الجلسة';
   };
 
@@ -126,7 +149,8 @@ export function Session({ meta, practice, onExit }: Props) {
       </div>
     );
   }
-  if (!text) return <div className="screen center muted">جارٍ التحميل…</div>;
+  if (!texts) return <div className="screen center muted">جارٍ التحميل…</div>;
+  const meta = item ? index[item.surah - 1] : undefined;
 
   const header = (
     <header className="session-head">
@@ -134,7 +158,7 @@ export function Session({ meta, practice, onExit }: Props) {
         ✕
       </button>
       <div className="session-title">
-        <strong>سورة {meta.name}</strong>
+        <strong>{meta ? `سورة ${meta.name}` : title}</strong>
         {item && <span className="muted"> · الآية {toArabicDigits(item.ayah + 1)}</span>}
       </div>
       {item && <span className={`badge ${item.kind}`}>{labelFor(item, !!practice)}</span>}
@@ -148,17 +172,18 @@ export function Session({ meta, practice, onExit }: Props) {
     return (
       <div className="screen">
         {header}
-        <Summary results={results} meta={meta} onExit={onExit} onMore={practice ? undefined : addMoreNew} />
+        <Summary results={results} index={index} title={title} onExit={onExit} onMore={practice ? undefined : addMoreNew} />
       </div>
     );
   }
 
+  const text = texts[item.surah];
   const words = text.ayahs[item.ayah];
-  const card = getState().progress[meta.n]?.[item.ayah];
+  const card = getState().progress[item.surah]?.[item.ayah];
   const context =
     settings.showContext && item.ayah > 0 ? text.ayahs[item.ayah - 1].slice(-6).join(' ') : '';
   const cards = settings.mode === 'cards';
-  const url = audioUrl(settings.reciter, meta.n, item.ayah);
+  const url = audioUrl(settings.reciter, item.surah, item.ayah);
 
   return (
     <div className={`screen session${cards ? ' card-mode' : ''}`} style={{ ['--q-scale' as string]: settings.fontScale }}>
@@ -188,7 +213,7 @@ export function Session({ meta, practice, onExit }: Props) {
           errs={card?.errs}
           autoStart={chain}
           prevWord={item.ayah > 0 ? text.ayahs[item.ayah - 1].at(-1) : undefined}
-          ayahLabel={`${meta.name} ﴿${toArabicDigits(item.ayah + 1)}﴾`}
+          ayahLabel={`${meta!.name} ﴿${toArabicDigits(item.ayah + 1)}﴾`}
           nextLabel={nextLabel}
           onFinish={(wrong, chainNext) => finish(wrong, chainNext && queue[pos + 1]?.phase === 'test')}
           footer={
@@ -296,28 +321,30 @@ function LearnCard({
 
 function Summary({
   results,
-  meta,
+  index,
+  title,
   onExit,
   onMore,
 }: {
   results: Result[];
-  meta: SurahMeta;
+  index: SurahMeta[];
+  title: string;
   onExit: () => void;
   onMore?: (n: number) => void;
 }) {
   const stats = useMemo(() => {
-    const firstTries = results.filter((r, i) => results.findIndex((x) => x.ayah === r.ayah) === i);
+    const firstTries = results.filter((r, i) => results.findIndex((x) => x.surah === r.surah && x.ayah === r.ayah) === i);
     const words = results.reduce((t, r) => t + r.words.length, 0);
     const mistakes = results.reduce((t, r) => t + r.wrong.filter(Boolean).length, 0);
     const perfect = firstTries.filter((r) => !r.wrong.some(Boolean)).length;
-    const stumbles = new Map<string, { ayah: number; word: string; before: string; count: number }>();
+    const stumbles = new Map<string, { surah: number; ayah: number; word: string; before: string; count: number }>();
     for (const r of results) {
       r.wrong.forEach((isWrong, i) => {
         if (!isWrong) return;
-        const key = `${r.ayah}:${i}`;
+        const key = `${r.surah}:${r.ayah}:${i}`;
         const prev = stumbles.get(key);
         if (prev) prev.count++;
-        else stumbles.set(key, { ayah: r.ayah, word: r.words[i], before: r.words.slice(Math.max(0, i - 2), i).join(' '), count: 1 });
+        else stumbles.set(key, { surah: r.surah, ayah: r.ayah, word: r.words[i], before: r.words.slice(Math.max(0, i - 2), i).join(' '), count: 1 });
       });
     }
     return {
@@ -327,7 +354,7 @@ function Summary({
       words,
       mistakes,
       perfect,
-      stumbles: [...stumbles.values()].sort((a, b) => a.ayah - b.ayah),
+      stumbles: [...stumbles.values()].sort((a, b) => a.surah - b.surah || a.ayah - b.ayah),
     };
   }, [results]);
 
@@ -335,7 +362,7 @@ function Summary({
     return (
       <div className="summary">
         <div className="done-mark">✓</div>
-        <h2>لا شيء مستحق اليوم في سورة {meta.name}</h2>
+        <h2>لا شيء مستحق اليوم في {title}</h2>
         <p className="muted">أتممت مراجعاتك. يمكنك حفظ آيات إضافية أو العودة غدًا.</p>
         <div className="controls">
           {onMore && (
@@ -366,8 +393,8 @@ function Summary({
           <h3>مواضع العثرات</h3>
           <ul className="stumbles">
             {stats.stumbles.map((s) => (
-              <li key={`${s.ayah}-${s.word}-${s.before}`}>
-                <span className="muted">آية {toArabicDigits(s.ayah + 1)}</span>
+              <li key={`${s.surah}-${s.ayah}-${s.word}-${s.before}`}>
+                <span className="muted">{index[s.surah - 1].name} {toArabicDigits(s.ayah + 1)}</span>
                 <span className="q">
                   {s.before && <span className="muted">{s.before} </span>}
                   <mark>{s.word}</mark>

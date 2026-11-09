@@ -120,31 +120,69 @@ export function mastery(card: AyahCard | undefined): number {
 }
 
 export interface QueueItem {
+  surah: number;
   ayah: number; // 0-based index within the surah
   kind: 'review' | 'new';
 }
 
-/** Builds today's queue for one surah: due reviews first (in mushaf order, so
- *  the meaning carries from ayah to ayah), then the next new ayahs. */
+export interface Range {
+  surah: number;
+  from: number;
+  to: number;
+}
+
+/** Builds today's queue for a goal: due reviews first (in mushaf order, so the
+ *  meaning carries from ayah to ayah), then the next new ayahs. */
 export function buildQueue(
-  cards: Record<number, AyahCard>,
-  ayahCount: number,
+  progress: Record<number, Record<number, AyahCard> | undefined>,
+  ranges: Range[],
   today: number,
   newAllowance: number,
 ): QueueItem[] {
   const queue: QueueItem[] = [];
-  for (let i = 0; i < ayahCount; i++) {
-    const c = cards[i];
-    if (c && c.due <= today) queue.push({ ayah: i, kind: 'review' });
+  for (const r of ranges) {
+    const cards = progress[r.surah] ?? {};
+    for (let i = r.from; i <= r.to; i++) {
+      const c = cards[i];
+      if (c && c.due <= today) queue.push({ surah: r.surah, ayah: i, kind: 'review' });
+    }
   }
   let added = 0;
-  for (let i = 0; i < ayahCount && added < newAllowance; i++) {
-    if (!cards[i]) {
-      queue.push({ ayah: i, kind: 'new' });
-      added++;
+  for (const r of ranges) {
+    const cards = progress[r.surah] ?? {};
+    for (let i = r.from; i <= r.to && added < newAllowance; i++) {
+      if (!cards[i]) {
+        queue.push({ surah: r.surah, ayah: i, kind: 'new' });
+        added++;
+      }
     }
   }
   return queue;
+}
+
+/** How many ayahs of the ranges are due today / started at all. */
+export function rangeCounts(progress: Record<number, Record<number, AyahCard> | undefined>, ranges: Range[], today: number) {
+  let due = 0;
+  let started = 0;
+  for (const r of ranges) {
+    const cards = progress[r.surah] ?? {};
+    for (let i = r.from; i <= r.to; i++) {
+      const c = cards[i];
+      if (!c) continue;
+      started++;
+      if (c.due <= today) due++;
+    }
+  }
+  return { due, started };
+}
+
+/** Word-level mastery buckets used by the home chart. */
+export type Level = 'solid' | 'medium' | 'basic' | 'intro';
+export function wordLevel(strength: number): Level {
+  if (strength >= 5) return 'solid';
+  if (strength >= 3) return 'medium';
+  if (strength >= 1) return 'basic';
+  return 'intro';
 }
 
 export function dueCount(cards: Record<number, AyahCard>, today: number): number {

@@ -1,29 +1,42 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { MasteryDonut } from '../components/MasteryDonut';
 import { SurahPicker } from '../components/SurahPicker';
-import { SurahMeta, toArabicDigits } from '../lib/quran';
-import { dayNumber, dueCount } from '../lib/srs';
+import { Goal, goalId, goalSubtitle, goalTitle, segmentAyahs, segments } from '../lib/goals';
+import { Parts, SurahMeta, toArabicDigits } from '../lib/quran';
+import { dayNumber, Level, rangeCounts, wordLevel } from '../lib/srs';
 import { addGoal, newIntroducedToday, streak, useStore } from '../lib/store';
 import { Stat } from './Session';
 
 interface Props {
   index: SurahMeta[];
-  onStart: (surah: number) => void;
-  onOpen: (surah: number) => void;
+  parts: Parts;
+  onStart: (goal: Goal) => void;
+  onOpen: (goal: Goal) => void;
 }
 
-export function Home({ index, onStart, onOpen }: Props) {
+export function Home({ index, parts, onStart, onOpen }: Props) {
   const state = useStore((s) => s);
-  const [picking, setPicking] = useState(false);
+  const [picking, setPicking] = useState<Goal['kind']>();
   const today = dayNumber();
   const log = state.log[today];
+
+  const totalWords = useMemo(() => index.reduce((t, s) => t + s.words, 0), [index]);
+  const levels = useMemo(() => {
+    const c: Record<Level, number> = { solid: 0, medium: 0, basic: 0, intro: 0 };
+    for (const cards of Object.values(state.progress)) for (const card of Object.values(cards)) for (const w of card.w) c[wordLevel(w)]++;
+    return c;
+  }, [state.progress]);
 
   return (
     <div className="screen">
       <section className="hero">
-        <div>
-          <h1>متين</h1>
-          <p>احفظ القرآن كلمةً كلمة، وثبّته بمراجعة ذكية.</p>
+        <div className="hero-top">
+          <div>
+            <h1>متين</h1>
+            <p>احفظ القرآن كلمةً كلمة، وثبّته بمراجعة ذكية.</p>
+          </div>
         </div>
+        <MasteryDonut counts={levels} total={totalWords} />
         <div className="stat-row compact">
           <Stat label="يوم متتالٍ" value={streak(state)} />
           <Stat label="آية اليوم" value={(log?.reviews ?? 0) + (log?.learned ?? 0)} />
@@ -33,44 +46,34 @@ export function Home({ index, onStart, onOpen }: Props) {
 
       <div className="section-head">
         <h2>أهدافي</h2>
-        <button className="btn small" onClick={() => setPicking(true)}>
-          + إضافة سورة
-        </button>
       </div>
 
       {state.goals.length === 0 && (
         <div className="empty">
-          <p>ابدأ باختيار السورة التي تريد حفظها أو مراجعتها.</p>
+          <p>ابدأ باختيار ما تريد حفظه أو مراجعته: سورة، أو جزء، أو حزب من تحزيب الصحابة.</p>
           <p className="muted">
             سيعرض عليك التطبيق كل يوم ما يحتاج إلى مراجعة أولًا — مع التركيز على المواضع التي تخطئ فيها — ثم آياتٍ
             جديدة لتحفظها.
           </p>
-          <button className="btn primary" onClick={() => setPicking(true)}>
-            اختر سورة
-          </button>
         </div>
       )}
 
       <ul className="goals">
         {state.goals.map((g) => {
-          const meta = index[g.surah - 1];
-          if (!meta) return null;
-          const cards = state.progress[g.surah] ?? {};
-          const started = Object.keys(cards).length;
-          const due = dueCount(cards, today);
-          const newLeft = Math.min(
-            meta.ayahs - started,
-            Math.max(0, state.settings.newPerDay - newIntroducedToday(state, g.surah)),
-          );
-          const pct = Math.round((started / meta.ayahs) * 100);
+          const segs = segments(g, index, parts);
+          const total = segmentAyahs(segs);
+          const { due, started } = rangeCounts(state.progress, segs, today);
+          const newLeft = Math.min(total - started, Math.max(0, state.settings.newPerDay - newIntroducedToday(state, goalId(g))));
+          const pct = Math.round((started / total) * 100);
           return (
-            <li key={g.surah} className="goal">
-              <button className="goal-main" onClick={() => onOpen(g.surah)}>
-                <span className="surah-num">{toArabicDigits(meta.n)}</span>
+            <li key={goalId(g)} className="goal">
+              <button className="goal-main" onClick={() => onOpen(g)}>
+                <span className={`surah-num k-${g.kind}`}>{toArabicDigits(g.n)}</span>
                 <span className="goal-text">
-                  <strong>سورة {meta.name}</strong>
+                  <strong>{goalTitle(g, index)}</strong>
                   <span className="muted">
-                    {toArabicDigits(started)} / {toArabicDigits(meta.ayahs)} آية · {toArabicDigits(pct)}٪
+                    {g.kind !== 'surah' && `${goalSubtitle(g, index, parts)} · `}
+                    {toArabicDigits(started)} / {toArabicDigits(total)} آية · {toArabicDigits(pct)}٪
                   </span>
                   <span className="bar">
                     <span style={{ width: `${pct}%` }} />
@@ -81,7 +84,7 @@ export function Home({ index, onStart, onOpen }: Props) {
                 {due > 0 && <span className="pill review">{toArabicDigits(due)} مراجعة</span>}
                 {newLeft > 0 && <span className="pill new">{toArabicDigits(newLeft)} جديدة</span>}
                 {due === 0 && newLeft === 0 && <span className="pill done">✓ أنهيت اليوم</span>}
-                <button className="btn primary small" onClick={() => onStart(g.surah)}>
+                <button className="btn primary small" onClick={() => onStart(g)}>
                   ابدأ
                 </button>
               </div>
@@ -90,15 +93,29 @@ export function Home({ index, onStart, onOpen }: Props) {
         })}
       </ul>
 
+      <div className="add-row">
+        <button className="btn" onClick={() => setPicking('surah')}>
+          + السور
+        </button>
+        <button className="btn" onClick={() => setPicking('juz')}>
+          + الأجزاء
+        </button>
+        <button className="btn" onClick={() => setPicking('manzil')}>
+          + تحزيب الصحابة
+        </button>
+      </div>
+
       {picking && (
         <SurahPicker
           index={index}
-          exclude={state.goals.map((g) => g.surah)}
-          onPick={(n) => {
-            addGoal(n);
-            setPicking(false);
+          parts={parts}
+          initialTab={picking}
+          exclude={state.goals.map(goalId)}
+          onPick={(kind, n) => {
+            addGoal(kind, n);
+            setPicking(undefined);
           }}
-          onClose={() => setPicking(false)}
+          onClose={() => setPicking(undefined)}
         />
       )}
     </div>

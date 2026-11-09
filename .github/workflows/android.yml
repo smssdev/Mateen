@@ -1,13 +1,28 @@
 name: Android APK
 
+# Builds the app on every push and publishes it as a GitHub Release, so the
+# latest APK is always at:
+#   https://github.com/smssdev/Mateen/releases/latest/download/mateen.apk
+#
+# Release signing uses these repository secrets (Settings → Secrets → Actions):
+#   MATEEN_KEYSTORE_BASE64, MATEEN_KEYSTORE_PASSWORD, MATEEN_KEY_ALIAS, MATEEN_KEY_PASSWORD
+# Without them the APK is signed with a throwaway debug key.
+
 on:
   push:
     branches: ['**']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.MATEEN_KEYSTORE_BASE64 }}
+      VERSION_CODE: ${{ github.run_number }}
+      VERSION_NAME: 1.0.${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,10 +37,46 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npx cap sync android
-      - name: Build debug APK
+
+      - name: Restore release keystore
+        if: env.KEYSTORE_BASE64 != ''
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "MATEEN_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          echo "MATEEN_KEYSTORE_PASSWORD=${{ secrets.MATEEN_KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
+          echo "MATEEN_KEY_ALIAS=${{ secrets.MATEEN_KEY_ALIAS }}" >> "$GITHUB_ENV"
+          echo "MATEEN_KEY_PASSWORD=${{ secrets.MATEEN_KEY_PASSWORD }}" >> "$GITHUB_ENV"
+
+      - name: Build APK (and AAB for Google Play when signed)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            ./gradlew assembleRelease bundleRelease --no-daemon
+          else
+            ./gradlew assembleRelease --no-daemon
+          fi
+          mkdir -p ../out
+          cp app/build/outputs/apk/release/app-release.apk ../out/mateen.apk
+          if [ -f app/build/outputs/bundle/release/app-release.aab ]; then
+            cp app/build/outputs/bundle/release/app-release.aab ../out/mateen.aab
+          fi
+
       - uses: actions/upload-artifact@v4
         with:
-          name: mateen-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: mateen-${{ env.VERSION_NAME }}
+          path: out/*
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION_NAME }}
+          name: متين ${{ env.VERSION_NAME }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          files: out/*
+          body: |
+            **تحميل مباشر لآخر نسخة:** https://github.com/${{ github.repository }}/releases/latest/download/mateen.apk
+
+            ${{ env.KEYSTORE_BASE64 != '' && 'نسخة موقّعة بمفتاح الإصدار.' || 'تنبيه: هذه النسخة موقّعة بمفتاح تجريبي مؤقت (لم تُضبط أسرار التوقيع بعد).' }}
+
+            ${{ github.event.head_commit.message }}

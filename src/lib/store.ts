@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import { AyahCard, dayNumber } from './srs';
+import { Goal, GoalKind, goalId } from './goals';
+
+export type { Goal };
 
 export interface Settings {
   newPerDay: number;
@@ -20,11 +23,6 @@ export interface DayLog {
   mistakes: number;
 }
 
-export interface Goal {
-  surah: number;
-  addedAt: number;
-}
-
 export interface State {
   version: 1;
   goals: Goal[];
@@ -32,8 +30,8 @@ export interface State {
   progress: Record<number, Record<number, AyahCard>>;
   /** day number → log */
   log: Record<number, DayLog>;
-  /** day number → surah → new ayahs introduced that day */
-  newToday: Record<number, Record<number, number>>;
+  /** day number → goal id → new ayahs introduced that day */
+  newToday: Record<number, Record<string, number>>;
   settings: Settings;
 }
 
@@ -66,9 +64,14 @@ function load(): State {
 
 export function normalize(data: Partial<State>): State {
   const base = initial();
+  // v0.1 stored goals as { surah, addedAt }
+  const goals = (data.goals ?? []).map((g: Goal | { surah: number; addedAt: number }) =>
+    'surah' in g ? { kind: 'surah' as const, n: g.surah, addedAt: g.addedAt } : g,
+  );
   return {
     ...base,
     ...data,
+    goals,
     version: 1,
     settings: { ...DEFAULT_SETTINGS, ...(data.settings ?? {}) },
   } as State;
@@ -120,20 +123,26 @@ export function useStore<T>(select: (s: State) => T): T {
 
 // ---------- actions ----------
 
-export function addGoal(surah: number) {
+export function addGoal(kind: GoalKind, n: number) {
   setState((s) =>
-    s.goals.some((g) => g.surah === surah) ? s : { ...s, goals: [...s.goals, { surah, addedAt: Date.now() }] },
+    s.goals.some((g) => g.kind === kind && g.n === n)
+      ? s
+      : { ...s, goals: [...s.goals, { kind, n, addedAt: Date.now() }] },
   );
 }
 
-export function removeGoal(surah: number) {
-  setState((s) => ({ ...s, goals: s.goals.filter((g) => g.surah !== surah) }));
+export function removeGoal(id: string) {
+  setState((s) => ({ ...s, goals: s.goals.filter((g) => goalId(g) !== id) }));
 }
 
-export function resetSurah(surah: number) {
+export function resetRange(segs: { surah: number; from: number; to: number }[]) {
   setState((s) => {
     const progress = { ...s.progress };
-    delete progress[surah];
+    for (const seg of segs) {
+      const cards = { ...(progress[seg.surah] ?? {}) };
+      for (let i = seg.from; i <= seg.to; i++) delete cards[i];
+      progress[seg.surah] = cards;
+    }
     return { ...s, progress };
   });
 }
@@ -145,7 +154,7 @@ export function putCard(surah: number, ayah: number, card: AyahCard) {
   }));
 }
 
-export function logAttempt(opts: { words: number; mistakes: number; review?: boolean; learnedSurah?: number }) {
+export function logAttempt(opts: { words: number; mistakes: number; review?: boolean; learnedGoal?: string }) {
   const today = dayNumber();
   setState((s) => {
     const prev = s.log[today] ?? { reviews: 0, learned: 0, words: 0, mistakes: 0 };
@@ -153,16 +162,16 @@ export function logAttempt(opts: { words: number; mistakes: number; review?: boo
       ...s.log,
       [today]: {
         reviews: prev.reviews + (opts.review ? 1 : 0),
-        learned: prev.learned + (opts.learnedSurah ? 1 : 0),
+        learned: prev.learned + (opts.learnedGoal ? 1 : 0),
         words: prev.words + opts.words,
         mistakes: prev.mistakes + opts.mistakes,
       },
     };
     let newToday = s.newToday;
-    if (opts.learnedSurah) {
+    if (opts.learnedGoal) {
       // keep only today's counters
       const day = s.newToday[today] ?? {};
-      newToday = { [today]: { ...day, [opts.learnedSurah]: (day[opts.learnedSurah] ?? 0) + 1 } };
+      newToday = { [today]: { ...day, [opts.learnedGoal]: (day[opts.learnedGoal] ?? 0) + 1 } };
     }
     return { ...s, log, newToday };
   });
@@ -180,8 +189,8 @@ export function resetAll() {
   setState(() => initial());
 }
 
-export function newIntroducedToday(s: State, surah: number): number {
-  return s.newToday[dayNumber()]?.[surah] ?? 0;
+export function newIntroducedToday(s: State, goal: string): number {
+  return s.newToday[dayNumber()]?.[goal] ?? 0;
 }
 
 export function streak(s: State): number {

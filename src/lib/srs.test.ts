@@ -51,14 +51,19 @@ describe('schedule', () => {
 });
 
 describe('buildQueue', () => {
-  it('puts due reviews first, then the next unseen ayahs in order', () => {
-    const cards = { 0: { ...newCard(3, 0), due: 5 }, 1: { ...newCard(3, 0), due: 10 }, 3: { ...newCard(3, 0), due: 2 } };
-    const q = buildQueue(cards, 6, 5, 2);
+  it('puts due reviews first, then the next unseen ayahs in order across surahs', () => {
+    const progress = {
+      2: { 0: { ...newCard(3, 0), due: 5 }, 1: { ...newCard(3, 0), due: 10 }, 3: { ...newCard(3, 0), due: 2 } },
+      3: { 0: { ...newCard(3, 0), due: 1 } },
+    };
+    const q = buildQueue(progress, [{ surah: 2, from: 0, to: 4 }, { surah: 3, from: 0, to: 2 }], 5, 3);
     expect(q).toEqual([
-      { ayah: 0, kind: 'review' },
-      { ayah: 3, kind: 'review' },
-      { ayah: 2, kind: 'new' },
-      { ayah: 4, kind: 'new' },
+      { surah: 2, ayah: 0, kind: 'review' },
+      { surah: 2, ayah: 3, kind: 'review' },
+      { surah: 3, ayah: 0, kind: 'review' },
+      { surah: 2, ayah: 2, kind: 'new' },
+      { surah: 2, ayah: 4, kind: 'new' },
+      { surah: 3, ayah: 1, kind: 'new' },
     ]);
   });
 });
