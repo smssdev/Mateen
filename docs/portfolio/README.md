@@ -20,6 +20,6 @@ copy of the live page in English and Arabic:
 
 ## Links to update
 
-The card points to `https://smssdev.github.io/Mateen/`. If you serve the app on a subdomain such as
-`hafiz.smszs.tech`, replace that URL in `card.html` and `palette.js` (see "Custom domain" in the
-project README).
+The card points to `https://hafiz.smszs.tech/`, served from the same server as smszs.tech (see
+[`deploy/README.md`](../../deploy/README.md)). The APK link is
+`https://github.com/smssdev/Mateen/releases/latest/download/hafiz-fahim.apk`.

@@ -1,0 +1,57 @@
+name: Website
+
+# Builds the site and uploads it to your own server (https://hafiz.smszs.tech) with deploy/deploy.sh — the same
+# release/symlink scheme as Orbit. Nothing is hosted on GitHub. Skipped until the SSH_HOST, SSH_USER and SSH_KEY
+# secrets exist (see deploy/README.md).
+
+# Type checks, lint and tests run on every push; the upload runs only from the main branch.
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+      APP_DIR: ${{ vars.APP_DIR || '/home/hafiz/htdocs/hafiz.smszs.tech' }}
+    steps:
+      - name: Check that the server is set up
+        id: ready
+        run: |
+          if [ "$GITHUB_REF_NAME" != main ] && [ "$GITHUB_REF_NAME" != ccr-de3ca3de-v5gngw ]; then
+            echo "Not the main branch: checks only."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          elif [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
+            echo "::warning::Deploy skipped: add the SSH_HOST, SSH_USER and SSH_KEY secrets (see deploy/README.md)."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Checks
+        run: npm ci && npm run check
+      - name: Build, upload and activate
+        if: steps.ready.outputs.ok == 'true'
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "$SSH_PORT" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          deploy/deploy.sh "$SSH_USER@$SSH_HOST"
