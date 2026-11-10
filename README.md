@@ -1,5 +1,40 @@
 <p align="center"><img src="public/brand/wordmark-light.png" alt="حافظ فاهم" width="420" /></p>
 
+<p align="center">
+  <a href="https://smssdev.github.io/Mateen/"><b>Live site</b></a> ·
+  <a href="https://smssdev.github.io/Mateen/app/"><b>Web app</b></a> ·
+  <a href="https://github.com/smssdev/Mateen/releases/latest/download/hafiz-fahim.apk"><b>Android APK</b></a> ·
+  <a href="https://smssdev.github.io/Mateen/identity/"><b>Brand guide</b></a>
+</p>
+
+## Hafiz Fahim (English)
+
+A Quran memorization app built on **understanding**. Every new verse is learned in three steps —
+*understand* its meaning (al-Muyassar tafsir), *link* it to the end of the previous verse and to
+look-alike verses, *repeat* with a reciter — and then recited **word by word** on swipeable cards.
+A spaced-repetition engine keeps a strength score for every single word and schedules each verse
+from it, so the exact words you stumble on come back first.
+
+| Landing page | Recitation & hints | The "link" step |
+| --- | --- | --- |
+| ![](docs/screenshots/landing.png) | ![](docs/screenshots/recitation.png) | ![](docs/screenshots/link-step.png) |
+
+**Highlights**
+- **Mutashabihat detection at build time:** verses sharing a run of 4+ normalised words are indexed
+  (2,750+ verses); the app warns right before the word where two similar verses part ways.
+- **Hints that teach:** ask for the verse's meaning or the word's first letter instead of revealing
+  it; a hinted word counts as a slip so it is reviewed again.
+- **Goals by surah, juz or the companions' seven-part division**, a mastery donut, a progress report
+  to share with a teacher, offline support, dark mode and backup/restore.
+- **One codebase, three targets:** a static landing page, a React PWA under `/app/`, and an Android
+  app (Capacitor) — the web build works at a domain root or under any sub-path.
+
+**Stack:** React 18 · TypeScript · Vite (multi-page) · Capacitor 6 · Vitest · ESLint · GitHub Actions
+(type checks, lint and tests on every push; GitHub Pages deploy; signed Android release with a fixed
+download link).
+
+---
+
 # حافظ فاهم — احفظ القرآن وافهم ما تحفظ
 
 منصة لحفظ القرآن الكريم وتحفيظه بأسلوب **الربط اللفظي والمعنوي**: تفهم الآية أولًا، وتربطها بما قبلها وبما يشبهها، ثم تسمّعها كلمةً كلمة، ويعيد عليك التطبيق مواضع ضعفك حتى تثبت.
@@ -30,7 +65,8 @@
 ```bash
 npm install
 npm run dev      # الموقع: /  — التطبيق: /app/  — الهوية: /identity/
-npm test         # اختبارات محرك المراجعة
+npm test         # الاختبارات (المراجعة، الأهداف، المتشابهات، الترحيل)
+npm run check    # فحص الأنواع + ESLint + الاختبارات
 npm run build    # BASE=/Mateen/ npm run build للنشر تحت مسار فرعي
 ```
 
@@ -50,6 +86,8 @@ npm run build    # BASE=/Mateen/ npm run build للنشر تحت مسار فرع
 ## النشر
 
 - **الموقع:** كل دفع يبني الموقع وينشره على GitHub Pages عبر `.github/workflows/pages.yml` (يجب أن يكون مصدر Pages في إعدادات المستودع هو «GitHub Actions»).
+- **نطاق خاص (مثل `hafiz.smszs.tech`):** أضف متغير المستودع `SITE_DOMAIN` بقيمة النطاق (Settings → Secrets and variables → Actions → Variables)، وسجل DNS من نوع CNAME يشير إلى `smssdev.github.io`، واكتب النطاق نفسه في Settings → Pages. يُبنى الموقع حينها على جذر النطاق تلقائيًا.
+- **بطاقة المشروع لموقع smszs.tech:** جاهزة في `docs/portfolio/`.
 - **أندرويد:** `.github/workflows/android.yml` يبني التطبيق (Capacitor) وينشره كـ Release. التوقيع من أسرار GitHub: `MATEEN_KEYSTORE_BASE64` و`MATEEN_KEYSTORE_PASSWORD` و`MATEEN_KEY_ALIAS` و`MATEEN_KEY_PASSWORD`، ومحليًا من `android/keystore.properties` (غير مرفوع). لا ترفع ملف المفتاح أبدًا.
 
 ```bash

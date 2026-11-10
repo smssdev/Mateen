@@ -2,6 +2,10 @@ name: Website
 
 # Publishes the landing page, the web app (/app/) and the brand guide (/identity/)
 # to GitHub Pages: https://smssdev.github.io/Mateen/
+#
+# Custom domain (e.g. hafiz.smszs.tech): set the repository variable SITE_DOMAIN
+# (Settings → Secrets and variables → Actions → Variables), point a DNS CNAME
+# record at smssdev.github.io, and enter the same domain under Settings → Pages.
 
 on:
   push:
@@ -27,12 +31,21 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
       - run: npm test
-      - name: Build for /Mateen/
-        run: npm run build
+      - run: npm run lint
+      - name: Build
         env:
-          BASE: /Mateen/
-      - run: cp dist/index.html dist/404.html
+          SITE_DOMAIN: ${{ vars.SITE_DOMAIN }}
+        run: |
+          if [ -n "$SITE_DOMAIN" ]; then
+            export BASE=/ VITE_SITE_URL="https://$SITE_DOMAIN/"
+          else
+            export BASE=/Mateen/ VITE_SITE_URL="https://smssdev.github.io/Mateen/"
+          fi
+          npm run build
+          cp dist/index.html dist/404.html
+          if [ -n "$SITE_DOMAIN" ]; then echo "$SITE_DOMAIN" > dist/CNAME; fi
       - uses: actions/configure-pages@v5
         with:
           enablement: true

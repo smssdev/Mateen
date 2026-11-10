@@ -1,0 +1,2 @@
+      { g: 'act', en: 'Open Hafiz Fahim (live app)', ar: 'فتح حافظ فاهم (التطبيق المباشر)', ic: 'go', run: function () { window.open('https://smssdev.github.io/Mateen/', '_blank', 'noopener'); }, kw: 'hafiz fahim quran memorization حافظ فاهم قرآن حفظ' },
+      { g: 'act', en: 'View Hafiz Fahim source code', ar: 'عرض كود مشروع حافظ فاهم', ic: 'gh', run: function () { window.open('https://github.com/smssdev/Mateen', '_blank', 'noopener'); }, kw: 'hafiz fahim code github' },

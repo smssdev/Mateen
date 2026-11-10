@@ -39,7 +39,7 @@ let total = 0;
 
 for (const s of surahs) {
   const ayahs = s.ayahs.map((a, i) => {
-    let words = a.text.replace(/^﻿/, '').trim().split(/\s+/);
+    let words = a.text.replace(/^\uFEFF/, '').trim().split(/\s+/);
     // The source prefixes the basmala to the first ayah of every surah except
     // al-Fatiha (where it *is* ayah 1) and at-Tawba (which has none).
     if (i === 0 && s.number !== 1 && s.number !== 9) words = words.slice(4);

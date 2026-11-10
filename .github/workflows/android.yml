@@ -34,7 +34,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - run: npm ci
-      - run: npm test
+      - run: npm run check
       - run: npm run build
       - run: npx cap sync android
 
