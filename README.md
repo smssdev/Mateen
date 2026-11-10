@@ -1,10 +1,10 @@
 <p align="center"><img src="public/brand/wordmark-light.png" alt="حافظ فاهم" width="420" /></p>
 
 <p align="center">
-  <a href="https://smssdev.github.io/Mateen/"><b>Live site</b></a> ·
-  <a href="https://smssdev.github.io/Mateen/app/"><b>Web app</b></a> ·
+  <a href="https://hafiz.smszs.tech/"><b>Live site</b></a> ·
+  <a href="https://hafiz.smszs.tech/app/"><b>Web app</b></a> ·
   <a href="https://github.com/smssdev/Mateen/releases/latest/download/hafiz-fahim.apk"><b>Android APK</b></a> ·
-  <a href="https://smssdev.github.io/Mateen/identity/"><b>Brand guide</b></a>
+  <a href="https://hafiz.smszs.tech/identity/"><b>Brand guide</b></a>
 </p>
 
 ## Hafiz Fahim (English)
@@ -30,7 +30,7 @@ from it, so the exact words you stumble on come back first.
   app (Capacitor) — the web build works at a domain root or under any sub-path.
 
 **Stack:** React 18 · TypeScript · Vite (multi-page) · Capacitor 6 · Vitest · ESLint · GitHub Actions
-(type checks, lint and tests on every push; GitHub Pages deploy; signed Android release with a fixed
+(type checks, lint and tests on every push; deploy to hafiz.smszs.tech on a self-hosted server; signed Android release with a fixed
 download link).
 
 ---
@@ -39,7 +39,7 @@ download link).
 
 منصة لحفظ القرآن الكريم وتحفيظه بأسلوب **الربط اللفظي والمعنوي**: تفهم الآية أولًا، وتربطها بما قبلها وبما يشبهها، ثم تسمّعها كلمةً كلمة، ويعيد عليك التطبيق مواضع ضعفك حتى تثبت.
 
-- 🌐 **الموقع والتطبيق على الويب:** https://smssdev.github.io/Mateen/ (التطبيق في `/app/`، ودليل الهوية في `/identity/`)
+- 🌐 **الموقع والتطبيق على الويب:** https://hafiz.smszs.tech/ (التطبيق في `/app/`، ودليل الهوية في `/identity/`)
 - 📥 **تطبيق أندرويد (APK):** [تحميل مباشر لآخر نسخة](https://github.com/smssdev/Mateen/releases/latest/download/hafiz-fahim.apk)
 
 ## المنهج
@@ -85,8 +85,7 @@ npm run build    # BASE=/Mateen/ npm run build للنشر تحت مسار فرع
 
 ## النشر
 
-- **الموقع:** كل دفع يبني الموقع وينشره على GitHub Pages عبر `.github/workflows/pages.yml` (يجب أن يكون مصدر Pages في إعدادات المستودع هو «GitHub Actions»).
-- **نطاق خاص (مثل `hafiz.smszs.tech`):** أضف متغير المستودع `SITE_DOMAIN` بقيمة النطاق (Settings → Secrets and variables → Actions → Variables)، وسجل DNS من نوع CNAME يشير إلى `smssdev.github.io`، واكتب النطاق نفسه في Settings → Pages. يُبنى الموقع حينها على جذر النطاق تلقائيًا.
+- **الموقع:** يُستضاف على السيرفر الخاص (CloudPanel، مثل Orbit) على `https://hafiz.smszs.tech`. النشر بأمر واحد: `deploy/deploy.sh hafiz@2.24.47.100` — يبني الموقع ويرفعه إلى `releases/` ثم يبدّل الرابط `current` دفعة واحدة. خطوات الإعداد لأول مرة (سجل DNS، الموقع في CloudPanel، الشهادة) في [`deploy/README.md`](deploy/README.md). اختياريًا يرفعه `.github/workflows/deploy.yml` تلقائيًا إلى السيرفر نفسه بعد إضافة أسرار SSH.
 - **بطاقة المشروع لموقع smszs.tech:** جاهزة في `docs/portfolio/`.
 - **أندرويد:** `.github/workflows/android.yml` يبني التطبيق (Capacitor) وينشره كـ Release. التوقيع من أسرار GitHub: `MATEEN_KEYSTORE_BASE64` و`MATEEN_KEYSTORE_PASSWORD` و`MATEEN_KEY_ALIAS` و`MATEEN_KEY_PASSWORD`، ومحليًا من `android/keystore.properties` (غير مرفوع). لا ترفع ملف المفتاح أبدًا.
 
